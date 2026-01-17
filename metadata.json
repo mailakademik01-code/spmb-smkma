@@ -1,0 +1,9 @@
+{
+  "name": "SPMB-SMKMA",
+  "description": "Sistem Informasi Penerimaan Peserta Didik Baru (PPDB) Digital untuk SMK Mathlaul Anwar Buaranjati, dilengkapi dengan AI Admission Assistant dan Formulir Pendaftaran Online 2025-2026.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone",
+    "geolocation"
+  ]
+}
