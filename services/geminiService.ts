@@ -2,9 +2,6 @@
 import { GoogleGenAI } from "@google/genai";
 import { SCHOOL_NAME, SCHOOL_TAGLINE, CONTACT_INFO, REQUIREMENTS, DEPARTMENTS } from "../constants.tsx";
 
-// Correctly initialize with a direct reference to process.env.API_KEY per guidelines
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-
 const DEPARTMENTS_INFO = DEPARTMENTS.map(d => `${d.code} (${d.name}): ${d.desc}`).join("\n");
 
 const SYSTEM_INSTRUCTION = `
@@ -34,6 +31,17 @@ Always respond in Indonesian. Keep answers short, direct, and welcoming. Use the
 
 export async function sendMessageToAssistant(message: string, history: any[] = []) {
   try {
+    const apiKey = process.env.API_KEY;
+    
+    // Validasi kunci API sebelum inisialisasi untuk mencegah library melempar error fatal
+    if (!apiKey || apiKey === '') {
+      console.warn("API_KEY Gemini belum dikonfigurasi di environment variables.");
+      return "Mohon maaf, layanan asisten AI sedang dinonaktifkan sementara oleh admin. Silakan hubungi WA kami di " + CONTACT_INFO.phone;
+    }
+
+    // Inisialisasi dilakukan di sini agar aplikasi tidak crash saat boot jika kunci tidak ada
+    const ai = new GoogleGenAI({ apiKey: apiKey });
+    
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
       contents: [
@@ -45,10 +53,9 @@ export async function sendMessageToAssistant(message: string, history: any[] = [
       },
     });
 
-    // response.text is a getter, correctly used without calling it as a method
     return response.text;
   } catch (error) {
     console.error("Gemini API Error:", error);
-    return "Maaf, sistem sedang sibuk. Silakan hubungi WA kami di " + CONTACT_INFO.phone;
+    return "Maaf, sistem sedang sibuk atau ada masalah koneksi. Silakan hubungi WA kami di " + CONTACT_INFO.phone;
   }
 }
