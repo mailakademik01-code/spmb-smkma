@@ -1,8 +1,8 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { MessageCircle, X, Send, Bot, User } from 'lucide-react';
-import { sendMessageToAssistant } from '../services/geminiService';
-import { ChatMessage } from '../types';
+import { sendMessageToAssistant } from '../services/geminiService.ts';
+import { ChatMessage } from '../types.ts';
 
 const AIChatBot: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);

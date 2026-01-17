@@ -1,6 +1,6 @@
 
 import { GoogleGenAI } from "@google/genai";
-import { SCHOOL_NAME, SCHOOL_TAGLINE, CONTACT_INFO, REQUIREMENTS, DEPARTMENTS } from "../constants";
+import { SCHOOL_NAME, SCHOOL_TAGLINE, CONTACT_INFO, REQUIREMENTS, DEPARTMENTS } from "../constants.tsx";
 
 // Correctly initialize with a direct reference to process.env.API_KEY per guidelines
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });

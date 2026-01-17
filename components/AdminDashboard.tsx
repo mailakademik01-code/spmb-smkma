@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
-import { supabase } from '../services/supabase';
+import { supabase } from '../services/supabase.ts';
 import { 
   Search, 
   Trash2, 
@@ -27,7 +27,7 @@ import {
   Settings,
   ShieldAlert
 } from 'lucide-react';
-import UserManagement from './UserManagement';
+import UserManagement from './UserManagement.tsx';
 
 interface Registration {
   id: string;

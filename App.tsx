@@ -34,11 +34,11 @@ import {
   CONTACT_INFO, 
   REQUIREMENTS,
   DEPARTMENTS
-} from './constants';
-import AIChatBot from './components/AIChatBot';
-import RegistrationForm from './components/RegistrationForm';
-import AdminDashboard from './components/AdminDashboard';
-import AdminLogin from './components/AdminLogin';
+} from './constants.tsx';
+import AIChatBot from './components/AIChatBot.tsx';
+import RegistrationForm from './components/RegistrationForm.tsx';
+import AdminDashboard from './components/AdminDashboard.tsx';
+import AdminLogin from './components/AdminLogin.tsx';
 
 const App: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);

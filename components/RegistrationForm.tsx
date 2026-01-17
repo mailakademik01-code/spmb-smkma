@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { MapPin, CheckCircle, ArrowRight, ArrowLeft, Loader2, User, Home, FileText, Printer, Globe, Bus, Users, Heart, ClipboardList, AlertTriangle, X } from 'lucide-react';
-import { supabase } from '../services/supabase';
+import { supabase } from '../services/supabase.ts';
 
 const RegistrationForm: React.FC = () => {
   const [step, setStep] = useState(1);

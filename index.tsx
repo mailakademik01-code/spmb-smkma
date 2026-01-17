@@ -1,7 +1,12 @@
 
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import App from './App';
+import App from './App.tsx';
+
+// Shim dasar untuk mencegah crash ReferenceError: process is not defined di browser
+if (typeof window !== 'undefined' && !(window as any).process) {
+  (window as any).process = { env: { API_KEY: '' } };
+}
 
 const mountApp = () => {
   const rootElement = document.getElementById('root');

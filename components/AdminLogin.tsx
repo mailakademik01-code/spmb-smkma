@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Lock, User, Eye, EyeOff, LogIn, AlertCircle, Loader2 } from 'lucide-react';
-import { supabase } from '../services/supabase';
+import { supabase } from '../services/supabase.ts';
 
 interface AdminLoginProps {
   onLoginSuccess: (user: any) => void;
