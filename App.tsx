@@ -28,7 +28,10 @@ import {
   Zap,
   Star,
   Award,
-  Image as ImageIcon
+  Image as ImageIcon,
+  ChevronRight,
+  Target,
+  Medal
 } from 'lucide-react';
 import { 
   SCHOOL_NAME, 
@@ -65,7 +68,6 @@ const App: React.FC = () => {
       try {
         const { data, error } = await supabase.from('major_settings').select('*');
         if (!error && data && data.length > 0) {
-          // Merge static code with dynamic description/logo
           setDynamicDepartments(data);
         }
       } catch (err) {
@@ -102,21 +104,26 @@ const App: React.FC = () => {
   }, []);
 
   const getMajorIcon = (dept: any) => {
-    if (dept.logo_url) {
-      return (
-        <div className="w-16 h-16 rounded-2xl overflow-hidden shadow-sm border border-white/20">
-          <img src={dept.logo_url} alt={dept.code} className="w-full h-full object-contain p-1" />
-        </div>
-      );
-    }
-    
-    // Default fallback icons
     const iconColor = dept.color_hex || '#10b981';
-    switch (dept.code) {
-      case "DKV": return <Palette style={{ color: iconColor }} size={40} />;
-      case "TKR": return <Car style={{ color: iconColor }} size={40} />;
-      default: return <GraduationCap size={40} />;
-    }
+    const bgStyle = { backgroundColor: `${iconColor}10` };
+    const borderStyle = { borderColor: `${iconColor}25` };
+
+    return (
+      <div 
+        className="w-24 h-24 md:w-28 md:h-28 rounded-[2rem] flex items-center justify-center border-2 shadow-sm transition-all duration-700 group-hover:scale-105 group-hover:rotate-2 group-hover:shadow-xl group-hover:shadow-emerald-900/5 overflow-hidden bg-white/50 backdrop-blur-sm" 
+        style={borderStyle}
+      >
+        <div className="w-full h-full p-4 flex items-center justify-center" style={bgStyle}>
+          {dept.logo_url ? (
+            <img src={dept.logo_url} alt={dept.code} className="w-full h-full object-contain drop-shadow-md" />
+          ) : (
+            dept.code === "DKV" ? <Palette style={{ color: iconColor }} size={44} /> : 
+            dept.code === "TKR" ? <Car style={{ color: iconColor }} size={44} /> : 
+            <GraduationCap style={{ color: iconColor }} size={44} />
+          )}
+        </div>
+      </div>
+    );
   };
 
   const handleNavigate = (tab: 'home' | 'register' | 'admin', hash?: string) => {
@@ -147,7 +154,7 @@ const App: React.FC = () => {
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col selection:bg-emerald-100 selection:text-emerald-900">
       {/* Navigation */}
-      <nav className={`fixed top-0 left-0 right-0 z-[60] transition-all duration-500 ${scrolled ? 'bg-white/80 backdrop-blur-xl border-b border-slate-200 py-2' : 'bg-transparent py-4'}`}>
+      <nav className={`fixed top-0 left-0 right-0 z-[60] transition-all duration-500 ${scrolled ? 'bg-white/95 backdrop-blur-xl border-b border-slate-200 py-2' : 'bg-transparent py-4'}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 md:h-18 items-center">
             <button 
@@ -330,49 +337,84 @@ const App: React.FC = () => {
 
             {/* Departments Section */}
             <section id="departments" className="py-32 bg-slate-50 relative overflow-hidden">
-              <div className="absolute top-0 left-0 w-full h-24 bg-gradient-to-b from-white to-transparent"></div>
+              <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-white to-transparent"></div>
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-                <div className="text-center mb-24 space-y-4">
+                <div className="text-center mb-20 md:mb-28 space-y-4">
                   <div className="inline-block bg-emerald-100 text-emerald-700 px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-[0.3em] mb-4">
                     Keahlian Masa Depan
                   </div>
-                  <h2 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tight">Program Keahlian Unggulan</h2>
-                  <p className="text-slate-500 max-w-2xl mx-auto font-medium">Kurikulum berbasis kompetensi yang dirancang untuk menjawab tantangan industri masa kini.</p>
+                  <h2 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tight leading-tight">Program Keahlian Unggulan</h2>
+                  <p className="text-slate-500 max-w-2xl mx-auto font-medium text-lg">Pendidikan berkualitas dengan infrastruktur modern untuk mencetak tenaga ahli profesional.</p>
                 </div>
                 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 md:gap-14">
                   {dynamicDepartments.map((dept, i) => (
-                    <div key={dept.code} className={`group relative bg-white p-12 rounded-[3.5rem] border border-slate-100 shadow-sm hover:shadow-[0_40px_80px_-15px_rgba(0,0,0,0.1)] transition-all duration-700 overflow-hidden ${i === 1 ? 'lg:translate-y-12' : ''}`}>
-                      <div className="absolute -top-12 -right-12 w-48 h-48 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-700 scale-50 group-hover:scale-100" style={{ backgroundColor: dept.color_hex + '10' }}></div>
-                      
-                      <div className="relative z-10">
-                        <div className="bg-slate-50 p-6 rounded-3xl inline-block mb-10 shadow-inner group-hover:text-white transition-all duration-500 group-hover:rotate-12" style={{ backgroundColor: scrolled ? 'white' : 'transparent', '--tw-bg-opacity': '1' }}>
-                          <div className="group-hover:hidden">
-                            {getMajorIcon(dept)}
-                          </div>
-                          <div className="hidden group-hover:block">
-                            <Zap size={40} />
+                    <div 
+                      key={dept.code} 
+                      className="group relative bg-white p-10 md:p-14 rounded-[2.5rem] border border-slate-100 shadow-[0_15px_30px_-10px_rgba(0,0,0,0.05)] hover:shadow-[0_40px_80px_-20px_rgba(0,0,0,0.1)] transition-all duration-700 flex flex-col"
+                    >
+                      {/* Interactive Glow Background */}
+                      <div 
+                        className="absolute -top-24 -right-24 w-64 h-64 rounded-full opacity-0 group-hover:opacity-10 blur-[80px] transition-opacity duration-700"
+                        style={{ backgroundColor: dept.color_hex }}
+                      ></div>
+
+                      <div className="relative z-10 flex flex-col h-full">
+                        <div className="flex flex-col md:flex-row md:items-start justify-between gap-6 mb-10">
+                          {getMajorIcon(dept)}
+                          <div className="inline-flex items-center gap-2 px-5 py-2.5 bg-white rounded-2xl border border-slate-100 shadow-sm">
+                             <Medal size={16} style={{ color: dept.color_hex }} className="animate-pulse" />
+                             <span className="text-[11px] font-black text-slate-900 uppercase tracking-widest">Akreditasi BAIK</span>
                           </div>
                         </div>
-                        <h4 className="text-4xl font-black text-slate-900 mb-2 tracking-tight transition-colors" style={{ color: dept.color_hex }}>{dept.code}</h4>
-                        <p className="text-xl font-bold text-slate-500 mb-6">{dept.name}</p>
-                        <p className="text-slate-400 leading-relaxed font-medium text-lg mb-10">{dept.description || dept.desc}</p>
+
+                        <div className="space-y-4 mb-8">
+                          <h4 
+                            className="text-5xl md:text-6xl font-black tracking-tighter"
+                            style={{ color: dept.color_hex }}
+                          >
+                            {dept.code}
+                          </h4>
+                          <h5 className="text-xl md:text-2xl font-black text-slate-800 tracking-tight uppercase leading-tight">{dept.name}</h5>
+                        </div>
+
+                        <p className="text-slate-500 leading-relaxed font-medium text-lg mb-10">
+                          {dept.description || dept.desc}
+                        </p>
                         
-                        <div className="flex flex-wrap gap-3 mb-10">
-                          {dept.code === 'DKV' ? (
-                            ['Desain Grafis', 'Multimedia', 'Fotografi', 'UI/UX'].map(tag => (
-                              <span key={tag} className="px-5 py-2.5 bg-slate-50 rounded-full text-[10px] font-black uppercase tracking-widest text-slate-500 border border-slate-100">{tag}</span>
-                            ))
-                          ) : (
-                            ['Otomotif', 'Teknisi Mesin', 'Listrik Kendaraan', 'EFI'].map(tag => (
-                              <span key={tag} className="px-5 py-2.5 bg-slate-50 rounded-full text-[10px] font-black uppercase tracking-widest text-slate-500 border border-slate-100">{tag}</span>
-                            ))
-                          )}
+                        <div className="flex flex-wrap gap-2.5 mb-12">
+                          {(dept.code === 'DKV' ? 
+                            ['Desain Grafis', 'Multimedia', 'Fotografi', 'UI/UX'] : 
+                            ['Otomotif', 'Teknisi Mesin', 'Listrik', 'Sistem EFI']
+                          ).map(tag => (
+                            <span 
+                              key={tag} 
+                              className="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider border transition-all duration-300"
+                              style={{ 
+                                backgroundColor: `${dept.color_hex}05`, 
+                                borderColor: `${dept.color_hex}15`,
+                                color: dept.color_hex 
+                              }}
+                            >
+                              {tag}
+                            </span>
+                          ))}
                         </div>
                         
-                        <button className="flex items-center gap-4 font-black text-sm uppercase tracking-[0.2em] group-hover:gap-6 transition-all" style={{ color: dept.color_hex }}>
-                          Detail Kurikulum <ArrowRight size={20} />
-                        </button>
+                        <div className="mt-auto">
+                          <button 
+                            className="flex items-center gap-4 font-black text-xs uppercase tracking-[0.2em] group/btn transition-all duration-300"
+                            style={{ color: dept.color_hex }}
+                          >
+                            <span className="relative pb-1">
+                              Detail Kurikulum
+                              <span className="absolute bottom-0 left-0 w-full h-[2px] scale-x-0 group-hover/btn:scale-x-100 transition-transform duration-300 origin-left" style={{ backgroundColor: dept.color_hex }}></span>
+                            </span>
+                            <div className="w-12 h-12 rounded-2xl flex items-center justify-center border border-slate-100 group-hover/btn:translate-x-2 transition-all shadow-sm bg-white" style={{ color: dept.color_hex }}>
+                              <ChevronRight size={20} />
+                            </div>
+                          </button>
+                        </div>
                       </div>
                     </div>
                   ))}
