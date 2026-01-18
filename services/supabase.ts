@@ -87,7 +87,23 @@ CREATE TABLE IF NOT EXISTS admin_users (
   role TEXT DEFAULT 'staff'
 );
 
--- 3. Masukkan Akun Admin Default
+-- 3. Tabel Pengaturan Jurusan (Logo & Ikon)
+CREATE TABLE IF NOT EXISTS major_settings (
+  code TEXT PRIMARY KEY, -- 'DKV' or 'TKR'
+  name TEXT,
+  description TEXT,
+  logo_url TEXT, -- URL Gambar custom
+  color_hex TEXT DEFAULT '#10b981'
+);
+
+-- 4. Inisialisasi Data Jurusan Default
+INSERT INTO major_settings (code, name, description, color_hex)
+VALUES 
+('DKV', 'Desain Komunikasi Visual', 'Mengembangkan kreativitas di bidang desain grafis, multimedia, fotografi, dan komunikasi visual.', '#8b5cf6'),
+('TKR', 'Teknik Kendaraan Ringan', 'Mendalami kompetensi teknisi otomotif profesional khusus kendaraan roda empat.', '#3b82f6')
+ON CONFLICT (code) DO NOTHING;
+
+-- 5. Masukkan Akun Admin Default
 INSERT INTO admin_users (username, password, full_name, role) 
 VALUES ('admin', 'smkma@2026', 'Administrator Utama', 'super_admin')
 ON CONFLICT (username) DO NOTHING;

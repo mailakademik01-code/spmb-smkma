@@ -25,9 +25,11 @@ import {
   GraduationCap,
   Calendar,
   Settings,
-  ShieldAlert
+  ShieldAlert,
+  Sliders
 } from 'lucide-react';
 import UserManagement from './UserManagement.tsx';
+import MajorSettings from './MajorSettings.tsx';
 
 interface Registration {
   id: string;
@@ -52,6 +54,8 @@ interface Registration {
   dusun: string;
   kelurahan: string;
   kecamatan: string;
+  kabupaten: string;
+  provinsi: string;
   kode_pos: string;
   lintang: string;
   bujur: string;
@@ -100,7 +104,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ adminProfile }) => {
   const [search, setSearch] = useState('');
   const [refreshing, setRefreshing] = useState(false);
   const [selectedReg, setSelectedReg] = useState<Registration | null>(null);
-  const [activeTab, setActiveTab] = useState<'registrations' | 'users'>('registrations');
+  const [activeTab, setActiveTab] = useState<'registrations' | 'users' | 'settings'>('registrations');
 
   const fetchRegistrations = async () => {
     setLoading(true);
@@ -207,25 +211,33 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ adminProfile }) => {
   return (
     <div className="space-y-8 pb-20">
       {/* Sub Navigation Tabs */}
-      <div className="flex bg-white p-1.5 rounded-2xl border border-slate-200 w-fit shadow-sm">
+      <div className="flex bg-white p-1.5 rounded-2xl border border-slate-200 w-fit shadow-sm overflow-x-auto">
         <button 
           onClick={() => setActiveTab('registrations')}
-          className={`px-6 py-2.5 rounded-xl font-black text-xs flex items-center gap-2 transition-all ${activeTab === 'registrations' ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-500 hover:bg-slate-50'}`}
+          className={`px-6 py-2.5 rounded-xl font-black text-xs flex items-center gap-2 transition-all whitespace-nowrap ${activeTab === 'registrations' ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-500 hover:bg-slate-50'}`}
         >
           <UsersIcon size={16} /> Data Pendaftar
         </button>
         
         {adminProfile?.role === 'super_admin' && (
-          <button 
-            onClick={() => setActiveTab('users')}
-            className={`px-6 py-2.5 rounded-xl font-black text-xs flex items-center gap-2 transition-all ${activeTab === 'users' ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-500 hover:bg-slate-50'}`}
-          >
-            <ShieldAlert size={16} /> Manajemen User
-          </button>
+          <>
+            <button 
+              onClick={() => setActiveTab('users')}
+              className={`px-6 py-2.5 rounded-xl font-black text-xs flex items-center gap-2 transition-all whitespace-nowrap ${activeTab === 'users' ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-500 hover:bg-slate-50'}`}
+            >
+              <ShieldAlert size={16} /> Manajemen User
+            </button>
+            <button 
+              onClick={() => setActiveTab('settings')}
+              className={`px-6 py-2.5 rounded-xl font-black text-xs flex items-center gap-2 transition-all whitespace-nowrap ${activeTab === 'settings' ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-500 hover:bg-slate-50'}`}
+            >
+              <Sliders size={16} /> Pengaturan Jurusan
+            </button>
+          </>
         )}
       </div>
 
-      {activeTab === 'registrations' ? (
+      {activeTab === 'registrations' && (
         <div className="space-y-8 animate-in fade-in duration-500">
           {/* Stats Cards */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -331,8 +343,14 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ adminProfile }) => {
             </div>
           </div>
         </div>
-      ) : (
-        adminProfile?.role === 'super_admin' ? <UserManagement /> : <div className="p-10 text-center bg-white rounded-3xl border border-slate-100">Anda tidak memiliki hak akses untuk halaman ini.</div>
+      )}
+
+      {activeTab === 'users' && adminProfile?.role === 'super_admin' && (
+        <UserManagement />
+      )}
+
+      {activeTab === 'settings' && adminProfile?.role === 'super_admin' && (
+        <MajorSettings />
       )}
 
       {selectedReg && (
@@ -389,6 +407,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ adminProfile }) => {
                     <DetailItem label="Dusun" value={selectedReg.dusun || '-'} />
                     <DetailItem label="Kelurahan / Desa" value={selectedReg.kelurahan} />
                     <DetailItem label="Kecamatan" value={selectedReg.kecamatan} />
+                    <DetailItem label="Kabupaten / Kota" value={selectedReg.kabupaten} />
+                    <DetailItem label="Provinsi" value={selectedReg.provinsi} />
                     <DetailItem label="Kode Pos" value={selectedReg.kode_pos} />
                     <DetailItem label="Tempat Tinggal" value={selectedReg.tempat_tinggal} />
                     <DetailItem label="Moda Transportasi" value={selectedReg.transportasi} />
@@ -401,12 +421,11 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ adminProfile }) => {
                     </div>
                   </div>
                </div>
-
+               
                <div className="space-y-6">
                   <h4 className="text-xs font-black text-emerald-600 uppercase flex items-center gap-2 tracking-widest border-b border-emerald-100 pb-2">
                     <UsersIcon size={14}/> 3. Data Orang Tua / Wali
                   </h4>
-                  
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                      <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm space-y-4">
                         <div className="flex items-center gap-2 text-[10px] font-black text-slate-800 uppercase tracking-widest border-l-4 border-emerald-500 pl-2 mb-2">Ayah Kandung</div>
@@ -419,7 +438,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ adminProfile }) => {
                            <DetailItem label="Penghasilan" value={selectedReg.penghasilan_ayah} />
                         </div>
                      </div>
-
                      <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm space-y-4">
                         <div className="flex items-center gap-2 text-[10px] font-black text-slate-800 uppercase tracking-widest border-l-4 border-emerald-500 pl-2 mb-2">Ibu Kandung</div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -431,7 +449,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ adminProfile }) => {
                            <DetailItem label="Penghasilan" value={selectedReg.penghasilan_ibu} />
                         </div>
                      </div>
-
                      <div className="bg-white p-6 rounded-3xl border border-amber-100 shadow-sm space-y-4 lg:col-span-2">
                         <div className="flex items-center gap-2 text-[10px] font-black text-amber-700 uppercase tracking-widest border-l-4 border-amber-500 pl-2 mb-2">Data Wali</div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
@@ -445,64 +462,15 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ adminProfile }) => {
                      </div>
                   </div>
                </div>
-
-               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                  <div className="lg:col-span-2 space-y-4">
-                     <h4 className="text-xs font-black text-emerald-600 uppercase flex items-center gap-2 tracking-widest border-b border-emerald-100 pb-2">
-                       <Heart size={14}/> 4. Data Periodik Murid
-                     </h4>
-                     <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm grid grid-cols-2 md:grid-cols-3 gap-6">
-                        <DetailItem label="Tinggi Badan" value={`${selectedReg.tinggi_badan} cm`} />
-                        <DetailItem label="Berat Badan" value={`${selectedReg.berat_badan} kg`} />
-                        <DetailItem label="Lingkar Kepala" value={`${selectedReg.lingkar_kepala} cm`} />
-                        <DetailItem label="Jarak Sekolah" value={selectedReg.jarak_sekolah} />
-                        <DetailItem label="Jarak Exact (Km)" value={`${selectedReg.jarak_km} km`} />
-                        <DetailItem label="Waktu Tempuh" value={`${selectedReg.waktu_jam} j ${selectedReg.waktu_menit} m`} />
-                        <DetailItem label="Jumlah Saudara" value={`${selectedReg.jumlah_saudara} orang`} />
-                     </div>
-                  </div>
-
-                  <div className="space-y-4">
-                     <h4 className="text-xs font-black text-emerald-600 uppercase flex items-center gap-2 tracking-widest border-b border-emerald-100 pb-2">
-                       <Phone size={14}/> 5. Kontak Aktif
-                     </h4>
-                     <div className="bg-slate-900 text-white p-6 rounded-3xl shadow-xl shadow-slate-200 space-y-4">
-                        <div>
-                           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">No. WhatsApp</p>
-                           <p className="text-lg font-black text-emerald-400">{selectedReg.no_hp}</p>
-                        </div>
-                        <div>
-                           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Alamat Email</p>
-                           <p className="text-sm font-medium text-slate-200 truncate">{selectedReg.email || '-'}</p>
-                        </div>
-                        <DetailItem label="Telp. Rumah" value={selectedReg.telp_rumah} />
-                     </div>
-                  </div>
-               </div>
             </div>
-
+            
             <div className="p-6 border-t border-slate-100 bg-white flex flex-wrap gap-4 justify-between items-center">
               <div className="flex gap-2">
-                 <button 
-                  onClick={() => updateStatus(selectedReg.id, 'approved')} 
-                  className={`px-6 py-3 rounded-2xl text-xs font-black flex items-center gap-2 transition-all shadow-lg active:scale-95 ${selectedReg.status === 'approved' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-emerald-100'}`}
-                 >
-                   <CheckCircle size={16} /> {selectedReg.status === 'approved' ? 'DITERIMA' : 'TERIMA SISWA'}
-                 </button>
-                 <button 
-                  onClick={() => updateStatus(selectedReg.id, 'rejected')} 
-                  className={`px-6 py-3 rounded-2xl text-xs font-black flex items-center gap-2 transition-all active:scale-95 ${selectedReg.status === 'rejected' ? 'bg-rose-50 text-rose-700 border border-rose-100' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'}`}
-                 >
-                   <XCircle size={16} /> {selectedReg.status === 'rejected' ? 'DITOLAK' : 'TOLAK'}
-                 </button>
+                 <button onClick={() => updateStatus(selectedReg.id, 'approved')} className={`px-6 py-3 rounded-2xl text-xs font-black flex items-center gap-2 transition-all shadow-lg active:scale-95 ${selectedReg.status === 'approved' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-emerald-100'}`}><CheckCircle size={16} /> {selectedReg.status === 'approved' ? 'DITERIMA' : 'TERIMA SISWA'}</button>
+                 <button onClick={() => updateStatus(selectedReg.id, 'rejected')} className={`px-6 py-3 rounded-2xl text-xs font-black flex items-center gap-2 transition-all active:scale-95 ${selectedReg.status === 'rejected' ? 'bg-rose-50 text-rose-700 border border-rose-100' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'}`}><XCircle size={16} /> {selectedReg.status === 'rejected' ? 'DITOLAK' : 'TOLAK'}</button>
               </div>
               {adminProfile?.role === 'super_admin' && (
-                <button 
-                  onClick={() => deleteRegistration(selectedReg.id)}
-                  className="bg-rose-50 hover:bg-rose-100 text-rose-600 px-6 py-3 rounded-2xl text-xs font-black flex items-center gap-2 transition-all active:scale-95 border border-rose-100"
-                >
-                  <Trash2 size={16} /> HAPUS PERMANEN
-                </button>
+                <button onClick={() => deleteRegistration(selectedReg.id)} className="bg-rose-50 hover:bg-rose-100 text-rose-600 px-6 py-3 rounded-2xl text-xs font-black flex items-center gap-2 transition-all active:scale-95 border border-rose-100"><Trash2 size={16} /> HAPUS PERMANEN</button>
               )}
             </div>
           </div>
@@ -513,11 +481,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ adminProfile }) => {
 };
 
 const StatsCard = ({ title, value, icon, color }: { title: string, value: number, icon: React.ReactNode, color: string }) => {
-  const colors: Record<string, string> = {
-    emerald: "bg-emerald-50 text-emerald-600 border-emerald-100",
-    purple: "bg-purple-50 text-purple-600 border-purple-100",
-    blue: "bg-blue-50 text-blue-600 border-blue-100",
-  };
+  const colors: Record<string, string> = { emerald: "bg-emerald-50 text-emerald-600 border-emerald-100", purple: "bg-purple-50 text-purple-600 border-purple-100", blue: "bg-blue-50 text-blue-600 border-blue-100" };
   return (
     <div className={`p-5 rounded-3xl border shadow-sm ${colors[color]} flex flex-col gap-2 transition-all hover:shadow-md`}>
       <div className="flex justify-between items-center">
@@ -532,9 +496,7 @@ const StatsCard = ({ title, value, icon, color }: { title: string, value: number
 const DetailItem = ({ label, value }: { label: string, value: string | null | undefined }) => (
   <div className="space-y-1">
     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{label}</p>
-    <p className="text-sm font-black text-slate-800 leading-tight">
-      {value && value !== '' && value !== 'undefined' ? value : <span className="text-slate-300 font-normal italic">Tidak diisi</span>}
-    </p>
+    <p className="text-sm font-black text-slate-800 leading-tight">{value && value !== '' && value !== 'undefined' ? value : <span className="text-slate-300 font-normal italic">Tidak diisi</span>}</p>
   </div>
 );
 

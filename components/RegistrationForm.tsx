@@ -33,6 +33,8 @@ const RegistrationForm: React.FC = () => {
     dusun: '',
     kelurahan: '',
     kecamatan: '',
+    kabupaten: '',
+    provinsi: '',
     kode_pos: '',
     lintang: '',
     bujur: '',
@@ -99,6 +101,8 @@ const RegistrationForm: React.FC = () => {
       if (!formData.rt || !formData.rw) missing.push("RT/RW");
       if (!formData.kelurahan) missing.push("Kelurahan");
       if (!formData.kecamatan) missing.push("Kecamatan");
+      if (!formData.kabupaten) missing.push("Kabupaten/Kota");
+      if (!formData.provinsi) missing.push("Provinsi");
       if (!formData.kode_pos) missing.push("Kode Pos");
       if (!formData.tempat_tinggal) missing.push("Tempat Tinggal");
       if (!formData.transportasi) missing.push("Transportasi");
@@ -277,6 +281,14 @@ const RegistrationForm: React.FC = () => {
                   <input type="text" name="nik" required value={formData.nik} onChange={handleChange} className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-6 py-5 text-sm font-black tracking-widest" maxLength={16} placeholder="3603..." />
                 </div>
                 <div>
+                  <label className="block text-xs font-black text-slate-500 mb-2 uppercase tracking-wide">No. Kartu Keluarga (KK) <span className="text-rose-500">*</span></label>
+                  <input type="text" name="no_kk" required value={formData.no_kk} onChange={handleChange} className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-6 py-5 text-sm font-black tracking-widest" maxLength={16} placeholder="3603..." />
+                </div>
+                <div>
+                  <label className="block text-xs font-black text-slate-500 mb-2 uppercase tracking-wide">No. Registrasi Akta Lahir <span className="text-rose-500">*</span></label>
+                  <input type="text" name="no_akta" required value={formData.no_akta} onChange={handleChange} className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-6 py-5 text-sm font-black" placeholder="Contoh: 1234/567/2008" />
+                </div>
+                <div>
                   <label className="block text-xs font-black text-slate-500 mb-2 uppercase tracking-wide">Jenis Kelamin <span className="text-rose-500">*</span></label>
                   <select name="jenis_kelamin" required value={formData.jenis_kelamin} onChange={handleChange} className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-6 py-5 text-sm font-black outline-none appearance-none">
                     <option value="">-- Pilih --</option>
@@ -347,6 +359,8 @@ const RegistrationForm: React.FC = () => {
               </div>
               <div><label className="block text-xs font-black text-slate-500 mb-2 uppercase tracking-wide">Kelurahan <span className="text-rose-500">*</span></label><input type="text" name="kelurahan" required value={formData.kelurahan} onChange={handleChange} className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-6 py-5 text-sm font-black" /></div>
               <div><label className="block text-xs font-black text-slate-500 mb-2 uppercase tracking-wide">Kecamatan <span className="text-rose-500">*</span></label><input type="text" name="kecamatan" required value={formData.kecamatan} onChange={handleChange} className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-6 py-5 text-sm font-black" /></div>
+              <div><label className="block text-xs font-black text-slate-500 mb-2 uppercase tracking-wide">Kabupaten/Kota <span className="text-rose-500">*</span></label><input type="text" name="kabupaten" required value={formData.kabupaten} onChange={handleChange} className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-6 py-5 text-sm font-black" placeholder="Contoh: Kab. Tangerang" /></div>
+              <div><label className="block text-xs font-black text-slate-500 mb-2 uppercase tracking-wide">Provinsi <span className="text-rose-500">*</span></label><input type="text" name="provinsi" required value={formData.provinsi} onChange={handleChange} className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-6 py-5 text-sm font-black" placeholder="Contoh: Banten" /></div>
               <div><label className="block text-xs font-black text-slate-500 mb-2 uppercase tracking-wide">Kode Pos <span className="text-rose-500">*</span></label><input type="text" name="kode_pos" required value={formData.kode_pos} onChange={handleChange} className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-6 py-5 text-sm font-black" /></div>
               <div>
                 <label className="block text-xs font-black text-slate-500 mb-2 uppercase tracking-wide">Moda Transportasi <span className="text-rose-500">*</span></label>

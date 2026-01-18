@@ -19,11 +19,6 @@ export const FEATURES: Feature[] = [
     icon: "ShieldCheck"
   },
   {
-    title: "Sertifikasi Profesi",
-    description: "Lulusan dibekali sertifikat kompetensi dari BNSP/LSP untuk bersaing di dunia kerja.",
-    icon: "Trophy"
-  },
-  {
     title: "Praktik Kerja Industri",
     description: "Program magang (PKL) di perusahaan-perusahaan terkemuka mitra sekolah.",
     icon: "Users"

@@ -12,6 +12,7 @@
     <style>
         body {
             font-family: 'Inter', sans-serif;
+            scroll-behavior: smooth;
         }
         h1, h2, h3, h4, .font-jakarta {
             font-family: 'Plus Jakarta Sans', sans-serif;
@@ -20,6 +21,68 @@
             background-color: #f8fafc;
             background-image: radial-gradient(#cbd5e1 0.5px, transparent 0.5px);
             background-size: 24px 24px;
+        }
+        
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+            100% { transform: translateY(0px); }
+        }
+        .animate-float {
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        @keyframes gradient-x {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        .animate-gradient-x {
+            background-size: 200% 200%;
+            animation: gradient-x 15s ease infinite;
+        }
+
+        @keyframes pulse-slow {
+            0%, 100% { opacity: 0.3; transform: scale(1); }
+            50% { opacity: 0.15; transform: scale(1.1); }
+        }
+        .animate-pulse-slow {
+            animation: pulse-slow 8s infinite;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .text-gradient {
+            background: linear-gradient(to right, #059669, #10b981, #34d399);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Hover effect for buttons */
+        .btn-shine {
+            position: relative;
+            overflow: hidden;
+        }
+        .btn-shine::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: rgba(255, 255, 255, 0.2);
+            transform: rotate(45deg);
+            transition: all 0.5s ease;
+            opacity: 0;
+        }
+        .btn-shine:hover::after {
+            left: 100%;
+            top: 100%;
+            opacity: 1;
         }
     </style>
 <script type="importmap">
@@ -37,7 +100,7 @@
 }
 </script>
 </head>
-<body class="bg-gray-50 text-slate-900">
+<body class="bg-gray-50 text-slate-900 overflow-x-hidden">
     <div id="root"></div>
     <script type="module" src="index.tsx"></script>
 </body>
