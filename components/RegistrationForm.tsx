@@ -1,12 +1,24 @@
 import React, { useState, useEffect } from 'react';
-import { MapPin, CheckCircle, ArrowRight, ArrowLeft, Loader2, User, Home, FileText, Printer, Globe, Bus, Users, Heart, ClipboardList, AlertTriangle, X, Clock as ClockIcon } from 'lucide-react';
+import { MapPin, CheckCircle, ArrowRight, ArrowLeft, Loader2, User, Home, FileText, Printer, Globe, Bus, Users, Heart, ClipboardList, AlertTriangle, X, Clock as ClockIcon, Calendar, CreditCard, GraduationCap, Briefcase, Wallet, Sparkles } from 'lucide-react';
 import { supabase } from '../services/supabase.ts';
+
+const SPECIAL_NEEDS_OPTIONS = [
+  "Netra", "Rungu", "Grahita Ringan", "Grahita Sedang", "Daksa Ringan", "Daksa Sedang", 
+  "Wicara", "Tuna Ganda", "Hiperaktif", "Cerdas Istimewa", "Bakat Istimewa", 
+  "Kesulitan Belajar", "Autis", "Narkoba", "Down Syndrome", "Lainnya"
+];
+
+const EDUCATION_OPTIONS = ["Tidak Sekolah", "Putus SD", "SD Sederajat", "SMP Sederajat", "SMA Sederajat", "D1", "D2", "D3", "D4/S1", "S2", "S3"];
+const JOB_OPTIONS = ["Tidak Bekerja", "Nelayan", "Petani", "Peternak", "PNS/TNI/POLRI", "Karyawan Swasta", "Pedagang Kecil", "Pedagang Besar", "Wiraswasta", "Buruh", "Pensiunan"];
+const INCOME_OPTIONS = ["< Rp500.000", "Rp500.000 – Rp999.999", "Rp1.000.000 – Rp1.999.999", "Rp2.000.000 – Rp4.999.999", "≥ Rp5.000.000", "Tidak Berpenghasilan"];
 
 const RegistrationForm: React.FC = () => {
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [isGeoLoading, setIsGeoLoading] = useState(false);
+  const [showGeoToast, setShowGeoToast] = useState(false);
 
   const [formData, setFormData] = useState({
     jurusan: '',
@@ -37,12 +49,27 @@ const RegistrationForm: React.FC = () => {
     tempat_tinggal: '',
     transportasi: '',
     transportasi_lainnya: '',
+    anak_ke: '',
+    penerima_kip: 'Tidak',
+    no_kip: '',
     nama_ayah: '',
     nik_ayah: '',
     tahun_lahir_ayah: '',
+    pendidikan_ayah: '',
+    pekerjaan_ayah: '',
+    penghasilan_ayah: '',
+    berkebutuhan_khusus_ayah: [] as string[],
     nama_ibu: '',
     nik_ibu: '',
     tahun_lahir_ibu: '',
+    pendidikan_ibu: '',
+    pekerjaan_ibu: '',
+    penghasilan_ibu: '',
+    berkebutuhan_khusus_ibu: [] as string[],
+    nama_wali: '',
+    pendidikan_wali: '',
+    pekerjaan_wali: '',
+    penghasilan_wali: '',
     no_hp: '',
     email: '',
     tinggi_badan: '',
@@ -61,10 +88,28 @@ const RegistrationForm: React.FC = () => {
     }
   }, [errorMsg]);
 
+  useEffect(() => {
+    if (showGeoToast) {
+      const timer = setTimeout(() => setShowGeoToast(false), 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [showGeoToast]);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
     if (errorMsg) setErrorMsg(null);
+  };
+
+  const toggleSpecialNeed = (need: string, field: 'berkebutuhan_khusus' | 'berkebutuhan_khusus_ayah' | 'berkebutuhan_khusus_ibu') => {
+    setFormData(prev => {
+      const current = [...(prev[field] as string[])];
+      if (current.includes(need)) {
+        return { ...prev, [field]: current.filter(n => n !== need) };
+      } else {
+        return { ...prev, [field]: [...current, need] };
+      }
+    });
   };
 
   const validateStep = (currentStep: number) => {
@@ -83,6 +128,7 @@ const RegistrationForm: React.FC = () => {
       if (!formData.tempat_lahir) missing.push("Tempat Lahir");
       if (!formData.tanggal_lahir) missing.push("Tanggal Lahir");
       if (!formData.agama) missing.push("Agama");
+      if (formData.kewarganegaraan === 'Asing' && !formData.negara_wna) missing.push("Nama Negara");
     } else if (currentStep === 3) {
       if (!formData.alamat_jalan) missing.push("Alamat Jalan");
       if (!formData.rt || !formData.rw) missing.push("RT/RW");
@@ -93,13 +139,21 @@ const RegistrationForm: React.FC = () => {
       if (!formData.kode_pos) missing.push("Kode Pos");
       if (!formData.tempat_tinggal) missing.push("Tempat Tinggal");
       if (!formData.transportasi) missing.push("Transportasi");
+      if (!formData.anak_ke) missing.push("Anak Ke-");
+      if (formData.penerima_kip === 'Ya' && !formData.no_kip) missing.push("Nomor KIP");
     } else if (currentStep === 4) {
       if (!formData.nama_ayah) missing.push("Nama Ayah");
       if (!formData.nik_ayah) missing.push("NIK Ayah");
       if (!formData.tahun_lahir_ayah) missing.push("Thn Lahir Ayah");
+      if (!formData.pendidikan_ayah) missing.push("Pendidikan Ayah");
+      if (!formData.pekerjaan_ayah) missing.push("Pekerjaan Ayah");
+      if (!formData.penghasilan_ayah) missing.push("Penghasilan Ayah");
       if (!formData.nama_ibu) missing.push("Nama Ibu");
       if (!formData.nik_ibu) missing.push("NIK Ibu");
       if (!formData.tahun_lahir_ibu) missing.push("Thn Lahir Ibu");
+      if (!formData.pendidikan_ibu) missing.push("Pendidikan Ibu");
+      if (!formData.pekerjaan_ibu) missing.push("Pekerjaan Ibu");
+      if (!formData.penghasilan_ibu) missing.push("Penghasilan Ibu");
     } else if (currentStep === 5) {
       if (!formData.tinggi_badan) missing.push("Tinggi Badan");
       if (!formData.berat_badan) missing.push("Berat Badan");
@@ -126,6 +180,7 @@ const RegistrationForm: React.FC = () => {
   };
 
   const handleGeolocation = () => {
+    setIsGeoLoading(true);
     if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition((position) => {
         setFormData(prev => ({
@@ -133,9 +188,15 @@ const RegistrationForm: React.FC = () => {
           lintang: position.coords.latitude.toString(),
           bujur: position.coords.longitude.toString()
         }));
+        setIsGeoLoading(false);
+        setShowGeoToast(true);
       }, () => {
-        setErrorMsg("Gagal mengambil lokasi. Silakan isi alamat manual.");
-      });
+        setIsGeoLoading(false);
+        setErrorMsg("Gagal mengambil lokasi. Pastikan izin GPS aktif.");
+      }, { enableHighAccuracy: true });
+    } else {
+      setIsGeoLoading(false);
+      setErrorMsg("Browser Anda tidak mendukung GPS.");
     }
   };
 
@@ -168,24 +229,19 @@ const RegistrationForm: React.FC = () => {
         return;
       }
 
-      // Pastikan data yang dikirim sinkron dengan schema database
       const payload = {
         ...formData,
-        berkebutuhan_khusus: formData.berkebutuhan_khusus.join(','),
+        berkebutuhan_khusus: formData.berkebutuhan_khusus.length > 0 ? formData.berkebutuhan_khusus.join(', ') : 'Tidak',
+        berkebutuhan_khusus_ayah: formData.berkebutuhan_khusus_ayah.length > 0 ? formData.berkebutuhan_khusus_ayah.join(', ') : 'Tidak',
+        berkebutuhan_khusus_ibu: formData.berkebutuhan_khusus_ibu.length > 0 ? formData.berkebutuhan_khusus_ibu.join(', ') : 'Tidak',
         submitted_at: new Date().toISOString()
       };
 
-      // Kirim data ke Supabase
       const { error } = await supabase
         .from('registrations')
         .insert([payload]);
 
-      if (error) {
-        if (error.message.includes('column') || error.message.includes('not found')) {
-          throw new Error(`Kolom '${error.message.split("'")[1]}' tidak ditemukan di database. Pastikan sudah menjalankan perintah ALTER TABLE di SQL Editor Supabase.`);
-        }
-        throw error;
-      }
+      if (error) throw error;
       
       setIsSuccess(true);
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -203,7 +259,7 @@ const RegistrationForm: React.FC = () => {
           <CheckCircle size={56} />
         </div>
         <h3 className="text-3xl font-black text-slate-900 mb-4 uppercase tracking-tight">Pendaftaran SPMB Sukses!</h3>
-        <p className="text-slate-500 mb-10 max-w-lg mx-auto font-medium leading-relaxed">Selamat! Anda sudah resmi terdaftar di sistem SPMB.</p>
+        <p className="text-slate-500 mb-10 max-w-lg mx-auto font-medium leading-relaxed">Selamat! Anda sudah resmi terdaftar di sistem SPMB pada {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}.</p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
           <button onClick={handlePrint} className="w-full sm:w-auto bg-slate-900 text-white px-10 py-5 rounded-2xl font-black flex items-center justify-center gap-3 shadow-2xl shadow-slate-200 hover:bg-black transition-all active:scale-95">
             <Printer size={20} /> Cetak Bukti Pendaftaran
@@ -218,6 +274,24 @@ const RegistrationForm: React.FC = () => {
 
   return (
     <div className="bg-white rounded-[3rem] shadow-2xl border border-slate-100 overflow-hidden relative">
+      {/* Floating Success Toast for GPS */}
+      {showGeoToast && (
+        <div className="fixed top-8 left-1/2 -translate-x-1/2 z-[100] w-[90%] max-w-sm animate-in slide-in-from-top-10 duration-500">
+           <div className="bg-emerald-600 text-white p-4 rounded-3xl shadow-[0_20px_50px_rgba(16,185,129,0.4)] border border-emerald-400 flex items-center gap-4">
+              <div className="bg-white/20 p-2 rounded-2xl">
+                 <CheckCircle className="text-white animate-bounce" size={24} />
+              </div>
+              <div>
+                 <p className="font-black text-xs uppercase tracking-widest leading-none">GPS Terdeteksi</p>
+                 <p className="text-[10px] font-bold text-emerald-50 mt-1">Kordinat berhasil diambil!</p>
+              </div>
+              <button onClick={() => setShowGeoToast(false)} className="ml-auto p-1 hover:bg-white/10 rounded-full transition-colors">
+                <X size={16} />
+              </button>
+           </div>
+        </div>
+      )}
+
       <div className="bg-slate-950 p-8 md:p-12 text-center text-white relative overflow-hidden">
         <div className="absolute top-0 left-0 w-full h-1.5 bg-emerald-500/20">
           <div className="h-full bg-emerald-500 transition-all duration-700 ease-out shadow-[0_0_10px_#10b981]" style={{ width: `${(step / 6) * 100}%` }}></div>
@@ -309,7 +383,7 @@ const RegistrationForm: React.FC = () => {
 
         {step === 2 && (
           <div className="space-y-10 animate-in slide-in-from-right duration-300">
-            <h4 className="text-xs font-black text-emerald-600 flex items-center gap-3 uppercase tracking-widest border-b border-emerald-100 pb-3"><Globe size={20} /> 2. Tempat & Tanggal Lahir</h4>
+            <h4 className="text-xs font-black text-emerald-600 flex items-center gap-3 uppercase tracking-widest border-b border-emerald-100 pb-3"><Globe size={20} /> 2. Kelahiran & Kewarganegaraan</h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div>
                 <label className="block text-xs font-black text-slate-500 mb-2 uppercase tracking-wide">Tempat Lahir <span className="text-rose-500">*</span></label>
@@ -329,6 +403,43 @@ const RegistrationForm: React.FC = () => {
                   <option value="Hindu">Hindu</option>
                   <option value="Buddha">Buddha</option>
                 </select>
+              </div>
+
+              <div className="space-y-4">
+                <label className="block text-xs font-black text-slate-500 mb-2 uppercase tracking-wide">Kewarganegaraan <span className="text-rose-500">*</span></label>
+                <div className="flex gap-4">
+                  <button type="button" onClick={() => setFormData(prev => ({...prev, kewarganegaraan: 'WNI', negara_wna: ''}))} className={`flex-1 py-4 rounded-2xl font-black text-xs border-2 transition-all ${formData.kewarganegaraan === 'WNI' ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white text-slate-600 border-slate-100'}`}>WNI</button>
+                  <button type="button" onClick={() => setFormData(prev => ({...prev, kewarganegaraan: 'Asing'}))} className={`flex-1 py-4 rounded-2xl font-black text-xs border-2 transition-all ${formData.kewarganegaraan === 'Asing' ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white text-slate-600 border-slate-100'}`}>Asing (WNA)</button>
+                </div>
+                {formData.kewarganegaraan === 'Asing' && (
+                  <input type="text" name="negara_wna" required value={formData.negara_wna} onChange={handleChange} placeholder="Nama Negara Asal" className="w-full bg-slate-50 border-2 border-emerald-100 rounded-2xl px-6 py-4 text-sm font-black animate-in slide-in-from-top duration-300" />
+                )}
+              </div>
+
+              <div className="md:col-span-2 space-y-4">
+                <label className="block text-xs font-black text-slate-500 mb-2 uppercase tracking-wide">Kebutuhan Khusus Calon Murid</label>
+                <div className="bg-slate-50 border-2 border-slate-100 rounded-[2.5rem] p-8 grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  {SPECIAL_NEEDS_OPTIONS.map(need => (
+                    <button
+                      key={need}
+                      type="button"
+                      onClick={() => toggleSpecialNeed(need, 'berkebutuhan_khusus')}
+                      className={`flex items-center gap-3 px-4 py-3 rounded-xl border transition-all text-left ${formData.berkebutuhan_khusus.includes(need) ? 'bg-emerald-600 border-emerald-600 text-white shadow-lg' : 'bg-white border-slate-100 text-slate-600 hover:border-emerald-200'}`}
+                    >
+                      <div className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 ${formData.berkebutuhan_khusus.includes(need) ? 'bg-white text-emerald-600' : 'bg-slate-100 border-slate-200'}`}>
+                        {formData.berkebutuhan_khusus.includes(need) && <CheckCircle size={12} />}
+                      </div>
+                      <span className="text-[10px] font-black uppercase tracking-tight leading-none">{need}</span>
+                    </button>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => setFormData(prev => ({...prev, berkebutuhan_khusus: []}))}
+                    className={`col-span-full py-4 rounded-xl border-2 font-black text-xs mt-2 transition-all ${formData.berkebutuhan_khusus.length === 0 ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-white text-slate-400 border-slate-100 hover:text-rose-500 hover:border-rose-100'}`}
+                  >
+                    TIDAK ADA KEBUTUHAN KHUSUS
+                  </button>
+                </div>
               </div>
             </div>
             <div className="flex justify-between pt-6">
@@ -350,7 +461,8 @@ const RegistrationForm: React.FC = () => {
                 <div><label className="block text-[10px] font-black text-slate-400 mb-1 uppercase tracking-widest">RT <span className="text-rose-500">*</span></label><input type="text" name="rt" required value={formData.rt} onChange={handleChange} className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-5 py-4 text-sm font-black" /></div>
                 <div><label className="block text-[10px] font-black text-slate-400 mb-1 uppercase tracking-widest">RW <span className="text-rose-500">*</span></label><input type="text" name="rw" required value={formData.rw} onChange={handleChange} className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-5 py-4 text-sm font-black" /></div>
               </div>
-              <div><label className="block text-xs font-black text-slate-500 mb-2 uppercase tracking-wide">Kelurahan <span className="text-rose-500">*</span></label><input type="text" name="kelurahan" required value={formData.kelurahan} onChange={handleChange} className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-6 py-5 text-sm font-black" /></div>
+              <div><label className="block text-xs font-black text-slate-500 mb-2 uppercase tracking-wide">Dusun</label><input type="text" name="dusun" value={formData.dusun} onChange={handleChange} className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-6 py-5 text-sm font-black" /></div>
+              <div><label className="block text-xs font-black text-slate-500 mb-2 uppercase tracking-wide">Kelurahan/Desa <span className="text-rose-500">*</span></label><input type="text" name="kelurahan" required value={formData.kelurahan} onChange={handleChange} className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-6 py-5 text-sm font-black" /></div>
               <div><label className="block text-xs font-black text-slate-500 mb-2 uppercase tracking-wide">Kecamatan <span className="text-rose-500">*</span></label><input type="text" name="kecamatan" required value={formData.kecamatan} onChange={handleChange} className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-6 py-5 text-sm font-black" /></div>
               <div><label className="block text-xs font-black text-slate-500 mb-2 uppercase tracking-wide">Kabupaten/Kota <span className="text-rose-500">*</span></label><input type="text" name="kabupaten" required value={formData.kabupaten} onChange={handleChange} className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-6 py-5 text-sm font-black" placeholder="Contoh: Kab. Tangerang" /></div>
               <div><label className="block text-xs font-black text-slate-500 mb-2 uppercase tracking-wide">Provinsi <span className="text-rose-500">*</span></label><input type="text" name="provinsi" required value={formData.provinsi} onChange={handleChange} className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-6 py-5 text-sm font-black" placeholder="Contoh: Banten" /></div>
@@ -379,13 +491,51 @@ const RegistrationForm: React.FC = () => {
                   <option value="Angkutan Umum">Angkutan Umum</option>
                 </select>
               </div>
+
+              <div>
+                <label className="block text-xs font-black text-slate-500 mb-2 uppercase tracking-wide">Anak Keberapa <span className="text-rose-500">*</span></label>
+                <input type="number" name="anak_ke" required value={formData.anak_ke} onChange={handleChange} className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-6 py-5 text-sm font-black outline-none" placeholder="Contoh: 1" />
+              </div>
+
+              <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-8 items-end bg-emerald-50/30 p-6 rounded-[2rem] border border-emerald-100/50">
+                <div>
+                  <label className="block text-xs font-black text-slate-500 mb-2 uppercase tracking-wide flex items-center gap-2">
+                    <CreditCard size={16} className="text-emerald-600" /> Punya KIP (Kartu Indonesia Pintar)? <span className="text-rose-500">*</span>
+                  </label>
+                  <select name="penerima_kip" required value={formData.penerima_kip} onChange={handleChange} className="w-full bg-white border-2 border-slate-100 rounded-2xl px-6 py-5 text-sm font-black outline-none">
+                    <option value="Tidak">Tidak Punya</option>
+                    <option value="Ya">Ya, Punya KIP</option>
+                  </select>
+                </div>
+
+                {formData.penerima_kip === 'Ya' && (
+                  <div className="animate-in slide-in-from-left duration-300">
+                    <label className="block text-xs font-black text-slate-500 mb-2 uppercase tracking-wide">Nomor KIP <span className="text-rose-500">*</span></label>
+                    <input type="text" name="no_kip" required value={formData.no_kip} onChange={handleChange} className="w-full bg-white border-2 border-emerald-200 rounded-2xl px-6 py-5 text-sm font-black outline-none focus:border-emerald-500" placeholder="Masukkan 6 digit no. KIP" />
+                  </div>
+                )}
+              </div>
             </div>
-            <div className="bg-emerald-50 p-6 rounded-3xl flex items-center justify-between border-2 border-emerald-100">
+
+            <div className="bg-emerald-50 p-6 rounded-3xl flex items-center justify-between border-2 border-emerald-100 relative group transition-all hover:bg-emerald-100/50">
               <div className="flex items-center gap-4">
-                 <div className="bg-white p-3 rounded-2xl text-emerald-600 shadow-sm"><MapPin size={24}/></div>
+                 <div className={`p-3 rounded-2xl shadow-sm transition-all duration-500 ${showGeoToast ? 'bg-emerald-600 text-white' : 'bg-white text-emerald-600'}`}><MapPin size={24}/></div>
                  <div className="text-[10px] font-black text-emerald-700 tracking-widest uppercase">Pinpoint Lokasi Rumah (GPS)</div>
               </div>
-              <button type="button" onClick={handleGeolocation} className="bg-slate-950 text-white px-6 py-3 rounded-xl text-xs font-black shadow-lg hover:bg-black transition-all"> Ambil Kordinat</button>
+              <button 
+                type="button" 
+                onClick={handleGeolocation} 
+                disabled={isGeoLoading}
+                className={`px-8 py-3.5 rounded-2xl text-xs font-black shadow-lg transition-all active:scale-95 flex items-center gap-2 ${showGeoToast ? 'bg-emerald-600 text-white hover:bg-emerald-700' : 'bg-slate-950 text-white hover:bg-black'}`}
+              >
+                {isGeoLoading ? (
+                  <><Loader2 className="animate-spin" size={16} /> Mencari...</>
+                ) : showGeoToast ? (
+                  <><CheckCircle size={16} /> Berhasil</>
+                ) : (
+                  'Ambil Kordinat'
+                )}
+              </button>
             </div>
             <div className="flex justify-between pt-6">
               <button type="button" onClick={() => setStep(prev => prev - 1)} className="text-slate-400 px-8 py-5 font-black flex items-center gap-3 hover:text-slate-900 transition-colors"> <ArrowLeft size={20} /> Kembali</button>
@@ -397,21 +547,170 @@ const RegistrationForm: React.FC = () => {
         {step === 4 && (
           <div className="space-y-12 animate-in slide-in-from-right duration-300">
             <h4 className="text-xs font-black text-emerald-600 flex items-center gap-3 uppercase tracking-widest border-b border-emerald-100 pb-3"><Users size={20} /> 4. Data Orang Tua</h4>
-            <div className="bg-slate-50 p-8 rounded-[2.5rem] space-y-8 border-2 border-slate-100 shadow-sm">
+            
+            {/* DATA AYAH KANDUNG */}
+            <div className="bg-slate-50 p-8 rounded-[2.5rem] space-y-10 border-2 border-slate-100 shadow-sm">
               <div className="text-[11px] font-black text-slate-800 uppercase tracking-[0.2em] border-l-4 border-emerald-500 pl-4">DATA AYAH KANDUNG</div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="md:col-span-2"><label className="block text-[10px] font-black text-slate-500 mb-2 uppercase tracking-wide">Nama Ayah <span className="text-rose-500">*</span></label><input type="text" name="nama_ayah" required value={formData.nama_ayah} onChange={handleChange} className="w-full bg-white border-2 border-slate-100 rounded-2xl px-6 py-5 text-sm font-black" /></div>
-                <div><label className="block text-[10px] font-black text-slate-500 mb-2 uppercase tracking-wide">NIK Ayah <span className="text-rose-500">*</span></label><input type="text" name="nik_ayah" required value={formData.nik_ayah} onChange={handleChange} className="w-full bg-white border-2 border-slate-100 rounded-2xl px-6 py-5 text-sm font-black tracking-widest" maxLength={16} /></div>
-                <div><label className="block text-[10px] font-black text-slate-500 mb-2 uppercase tracking-wide">Tahun Lahir <span className="text-rose-500">*</span></label><input type="text" name="tahun_lahir_ayah" required value={formData.tahun_lahir_ayah} onChange={handleChange} className="w-full bg-white border-2 border-slate-100 rounded-2xl px-6 py-5 text-sm font-black" /></div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div className="md:col-span-2 lg:col-span-3">
+                  <label className="block text-[10px] font-black text-slate-500 mb-2 uppercase tracking-wide">Nama Lengkap Ayah <span className="text-rose-500">*</span></label>
+                  <input type="text" name="nama_ayah" required value={formData.nama_ayah} onChange={handleChange} className="w-full bg-white border-2 border-slate-100 rounded-2xl px-6 py-5 text-sm font-black" />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-black text-slate-500 mb-2 uppercase tracking-wide">NIK Ayah <span className="text-rose-500">*</span></label>
+                  <input type="text" name="nik_ayah" required value={formData.nik_ayah} onChange={handleChange} className="w-full bg-white border-2 border-slate-100 rounded-2xl px-6 py-5 text-sm font-black tracking-widest" maxLength={16} />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-black text-slate-500 mb-2 uppercase tracking-wide">Tahun Lahir Ayah <span className="text-rose-500">*</span></label>
+                  <input type="text" name="tahun_lahir_ayah" required value={formData.tahun_lahir_ayah} onChange={handleChange} className="w-full bg-white border-2 border-slate-100 rounded-2xl px-6 py-5 text-sm font-black" placeholder="Contoh: 1975" />
+                </div>
+
+                <div className="md:col-span-2 lg:col-span-3 space-y-4">
+                  <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2"><GraduationCap size={14} className="text-emerald-600" /> Pendidikan Terakhir Ayah <span className="text-rose-500">*</span></label>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                    {EDUCATION_OPTIONS.map(opt => (
+                      <button key={opt} type="button" onClick={() => setFormData({...formData, pendidikan_ayah: opt})} className={`px-4 py-3 rounded-xl border-2 font-black text-[10px] uppercase transition-all ${formData.pendidikan_ayah === opt ? 'bg-emerald-600 text-white border-emerald-600 shadow-lg shadow-emerald-100' : 'bg-white text-slate-500 border-slate-100'}`}>{opt}</button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="md:col-span-2 lg:col-span-3 space-y-4 pt-4 border-t border-slate-100">
+                  <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2"><Briefcase size={14} className="text-emerald-600" /> Pekerjaan Ayah <span className="text-rose-500">*</span></label>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                    {JOB_OPTIONS.map(opt => (
+                      <button key={opt} type="button" onClick={() => setFormData({...formData, pekerjaan_ayah: opt})} className={`px-4 py-3 rounded-xl border-2 font-black text-[10px] uppercase transition-all ${formData.pekerjaan_ayah === opt ? 'bg-emerald-600 text-white border-emerald-600 shadow-lg shadow-emerald-100' : 'bg-white text-slate-500 border-slate-100'}`}>{opt}</button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="md:col-span-2 lg:col-span-3 space-y-4 pt-4 border-t border-slate-100">
+                  <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2"><Wallet size={14} className="text-emerald-600" /> Penghasilan Bulanan Ayah <span className="text-rose-500">*</span></label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+                    {INCOME_OPTIONS.map(opt => (
+                      <button key={opt} type="button" onClick={() => setFormData({...formData, penghasilan_ayah: opt})} className={`px-4 py-3 rounded-xl border-2 font-black text-[10px] uppercase transition-all ${formData.penghasilan_ayah === opt ? 'bg-emerald-600 text-white border-emerald-600 shadow-lg shadow-emerald-100' : 'bg-white text-slate-500 border-slate-100'}`}>{opt}</button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="md:col-span-2 lg:col-span-3 space-y-4 pt-4 border-t border-slate-100">
+                  <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2"><Heart size={14} className="text-emerald-600" /> Kebutuhan Khusus Ayah</label>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
+                    <button type="button" onClick={() => setFormData({...formData, berkebutuhan_khusus_ayah: []})} className={`px-4 py-3 rounded-xl border-2 font-black text-[10px] uppercase transition-all flex items-center justify-center gap-2 ${formData.berkebutuhan_khusus_ayah.length === 0 ? 'bg-emerald-600 text-white border-emerald-600 shadow-lg shadow-emerald-100' : 'bg-white text-slate-500 border-slate-100 hover:border-emerald-200'}`}>
+                      <div className={`w-3.5 h-3.5 rounded border flex items-center justify-center shrink-0 ${formData.berkebutuhan_khusus_ayah.length === 0 ? 'bg-white text-emerald-600' : 'bg-slate-50'}`}>{formData.berkebutuhan_khusus_ayah.length === 0 && <CheckCircle size={10} />}</div>
+                      Tidak
+                    </button>
+                    {SPECIAL_NEEDS_OPTIONS.map(need => (
+                      <button key={need} type="button" onClick={() => toggleSpecialNeed(need, 'berkebutuhan_khusus_ayah')} className={`flex items-center gap-2 px-3 py-3 rounded-xl border-2 transition-all text-left ${formData.berkebutuhan_khusus_ayah.includes(need) ? 'bg-emerald-600 border-emerald-600 text-white shadow-lg shadow-emerald-100' : 'bg-white border-slate-100 text-slate-400 hover:border-emerald-200'}`}>
+                        <div className={`w-3.5 h-3.5 rounded border flex items-center justify-center shrink-0 ${formData.berkebutuhan_khusus_ayah.includes(need) ? 'bg-white text-emerald-600' : 'bg-slate-50'}`}>{formData.berkebutuhan_khusus_ayah.includes(need) && <CheckCircle size={10} />}</div>
+                        <span className="text-[9px] font-black uppercase tracking-tight leading-none">{need}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
 
-            <div className="bg-slate-50 p-8 rounded-[2.5rem] space-y-8 border-2 border-slate-100 shadow-sm">
+            {/* DATA IBU KANDUNG */}
+            <div className="bg-slate-50 p-8 rounded-[2.5rem] space-y-10 border-2 border-slate-100 shadow-sm">
               <div className="text-[11px] font-black text-slate-800 uppercase tracking-[0.2em] border-l-4 border-emerald-500 pl-4">DATA IBU KANDUNG</div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="md:col-span-2"><label className="block text-[10px] font-black text-slate-500 mb-2 uppercase tracking-wide">Nama Ibu <span className="text-rose-500">*</span></label><input type="text" name="nama_ibu" required value={formData.nama_ibu} onChange={handleChange} className="w-full bg-white border-2 border-slate-100 rounded-2xl px-6 py-5 text-sm font-black" /></div>
-                <div><label className="block text-[10px] font-black text-slate-500 mb-2 uppercase tracking-wide">NIK Ibu <span className="text-rose-500">*</span></label><input type="text" name="nik_ibu" required value={formData.nik_ibu} onChange={handleChange} className="w-full bg-white border-2 border-slate-100 rounded-2xl px-6 py-5 text-sm font-black tracking-widest" maxLength={16} /></div>
-                <div><label className="block text-[10px] font-black text-slate-500 mb-2 uppercase tracking-wide">Tahun Lahir <span className="text-rose-500">*</span></label><input type="text" name="tahun_lahir_ibu" required value={formData.tahun_lahir_ibu} onChange={handleChange} className="w-full bg-white border-2 border-slate-100 rounded-2xl px-6 py-5 text-sm font-black" /></div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div className="md:col-span-2 lg:col-span-3">
+                  <label className="block text-[10px] font-black text-slate-500 mb-2 uppercase tracking-wide">Nama Lengkap Ibu <span className="text-rose-500">*</span></label>
+                  <input type="text" name="nama_ibu" required value={formData.nama_ibu} onChange={handleChange} className="w-full bg-white border-2 border-slate-100 rounded-2xl px-6 py-5 text-sm font-black" />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-black text-slate-500 mb-2 uppercase tracking-wide">NIK Ibu <span className="text-rose-500">*</span></label>
+                  <input type="text" name="nik_ibu" required value={formData.nik_ibu} onChange={handleChange} className="w-full bg-white border-2 border-slate-100 rounded-2xl px-6 py-5 text-sm font-black tracking-widest" maxLength={16} />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-black text-slate-500 mb-2 uppercase tracking-wide">Tahun Lahir Ibu <span className="text-rose-500">*</span></label>
+                  <input type="text" name="tahun_lahir_ibu" required value={formData.tahun_lahir_ibu} onChange={handleChange} className="w-full bg-white border-2 border-slate-100 rounded-2xl px-6 py-5 text-sm font-black" placeholder="Contoh: 1980" />
+                </div>
+
+                <div className="md:col-span-2 lg:col-span-3 space-y-4">
+                  <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2"><GraduationCap size={14} className="text-emerald-600" /> Pendidikan Terakhir Ibu <span className="text-rose-500">*</span></label>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                    {EDUCATION_OPTIONS.map(opt => (
+                      <button key={opt} type="button" onClick={() => setFormData({...formData, pendidikan_ibu: opt})} className={`px-4 py-3 rounded-xl border-2 font-black text-[10px] uppercase transition-all ${formData.pendidikan_ibu === opt ? 'bg-emerald-600 text-white border-emerald-600 shadow-lg shadow-emerald-100' : 'bg-white text-slate-500 border-slate-100'}`}>{opt}</button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="md:col-span-2 lg:col-span-3 space-y-4 pt-4 border-t border-slate-100">
+                  <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2"><Briefcase size={14} className="text-emerald-600" /> Pekerjaan Ibu <span className="text-rose-500">*</span></label>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                    {JOB_OPTIONS.map(opt => (
+                      <button key={opt} type="button" onClick={() => setFormData({...formData, pekerjaan_ibu: opt})} className={`px-4 py-3 rounded-xl border-2 font-black text-[10px] uppercase transition-all ${formData.pekerjaan_ibu === opt ? 'bg-emerald-600 text-white border-emerald-600 shadow-lg shadow-emerald-100' : 'bg-white text-slate-500 border-slate-100'}`}>{opt}</button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="md:col-span-2 lg:col-span-3 space-y-4 pt-4 border-t border-slate-100">
+                  <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2"><Wallet size={14} className="text-emerald-600" /> Penghasilan Bulanan Ibu <span className="text-rose-500">*</span></label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+                    {INCOME_OPTIONS.map(opt => (
+                      <button key={opt} type="button" onClick={() => setFormData({...formData, penghasilan_ibu: opt})} className={`px-4 py-3 rounded-xl border-2 font-black text-[10px] uppercase transition-all ${formData.penghasilan_ibu === opt ? 'bg-emerald-600 text-white border-emerald-600 shadow-lg shadow-emerald-100' : 'bg-white text-slate-500 border-slate-100'}`}>{opt}</button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="md:col-span-2 lg:col-span-3 space-y-4 pt-4 border-t border-slate-100">
+                  <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2"><Heart size={14} className="text-emerald-600" /> Kebutuhan Khusus Ibu</label>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
+                    <button type="button" onClick={() => setFormData({...formData, berkebutuhan_khusus_ibu: []})} className={`px-4 py-3 rounded-xl border-2 font-black text-[10px] uppercase transition-all flex items-center justify-center gap-2 ${formData.berkebutuhan_khusus_ibu.length === 0 ? 'bg-emerald-600 text-white border-emerald-600 shadow-lg shadow-emerald-100' : 'bg-white text-slate-500 border-slate-100 hover:border-emerald-200'}`}>
+                      <div className={`w-3.5 h-3.5 rounded border flex items-center justify-center shrink-0 ${formData.berkebutuhan_khusus_ibu.length === 0 ? 'bg-white text-emerald-600' : 'bg-slate-50'}`}>{formData.berkebutuhan_khusus_ibu.length === 0 && <CheckCircle size={10} />}</div>
+                      Tidak
+                    </button>
+                    {SPECIAL_NEEDS_OPTIONS.map(need => (
+                      <button key={need} type="button" onClick={() => toggleSpecialNeed(need, 'berkebutuhan_khusus_ibu')} className={`flex items-center gap-2 px-3 py-3 rounded-xl border-2 transition-all text-left ${formData.berkebutuhan_khusus_ibu.includes(need) ? 'bg-emerald-600 border-emerald-600 text-white shadow-lg shadow-emerald-100' : 'bg-white border-slate-100 text-slate-400 hover:border-emerald-200'}`}>
+                        <div className={`w-3.5 h-3.5 rounded border flex items-center justify-center shrink-0 ${formData.berkebutuhan_khusus_ibu.includes(need) ? 'bg-white text-emerald-600' : 'bg-slate-50'}`}>{formData.berkebutuhan_khusus_ibu.includes(need) && <CheckCircle size={10} />}</div>
+                        <span className="text-[9px] font-black uppercase tracking-tight leading-none">{need}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* DATA WALI (OPSIONAL) */}
+            <div className="bg-slate-50 p-8 rounded-[2.5rem] space-y-10 border-2 border-dashed border-slate-200 shadow-sm relative">
+              <div className="absolute -top-3 right-8 bg-slate-200 text-slate-600 px-4 py-1 rounded-full text-[9px] font-black uppercase tracking-widest">OPSIONAL (Jika Ada)</div>
+              <div className="text-[11px] font-black text-slate-800 uppercase tracking-[0.2em] border-l-4 border-slate-400 pl-4">DATA WALI</div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div className="md:col-span-2 lg:col-span-3">
+                  <label className="block text-[10px] font-black text-slate-500 mb-2 uppercase tracking-wide">Nama Lengkap Wali</label>
+                  <input type="text" name="nama_wali" value={formData.nama_wali} onChange={handleChange} className="w-full bg-white border-2 border-slate-100 rounded-2xl px-6 py-5 text-sm font-black" placeholder="Kosongkan jika tidak ada wali" />
+                </div>
+
+                <div className="md:col-span-2 lg:col-span-3 space-y-4">
+                  <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2"><GraduationCap size={14} className="text-slate-400" /> Pendidikan Terakhir Wali</label>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                    {EDUCATION_OPTIONS.map(opt => (
+                      <button key={opt} type="button" onClick={() => setFormData({...formData, pendidikan_wali: opt})} className={`px-4 py-3 rounded-xl border-2 font-black text-[10px] uppercase transition-all ${formData.pendidikan_wali === opt ? 'bg-slate-600 text-white border-slate-600 shadow-lg' : 'bg-white text-slate-500 border-slate-100 hover:border-slate-300'}`}>{opt}</button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="md:col-span-2 lg:col-span-3 space-y-4 pt-4 border-t border-slate-100">
+                  <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2"><Briefcase size={14} className="text-slate-400" /> Pekerjaan Wali</label>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                    {JOB_OPTIONS.map(opt => (
+                      <button key={opt} type="button" onClick={() => setFormData({...formData, pekerjaan_wali: opt})} className={`px-4 py-3 rounded-xl border-2 font-black text-[10px] uppercase transition-all ${formData.pekerjaan_wali === opt ? 'bg-slate-600 text-white border-slate-600 shadow-lg' : 'bg-white text-slate-500 border-slate-100 hover:border-slate-300'}`}>{opt}</button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="md:col-span-2 lg:col-span-3 space-y-4 pt-4 border-t border-slate-100">
+                  <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2"><Wallet size={14} className="text-slate-400" /> Penghasilan Bulanan Wali</label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+                    {INCOME_OPTIONS.map(opt => (
+                      <button key={opt} type="button" onClick={() => setFormData({...formData, penghasilan_wali: opt})} className={`px-4 py-3 rounded-xl border-2 font-black text-[10px] uppercase transition-all ${formData.penghasilan_wali === opt ? 'bg-slate-600 text-white border-slate-600 shadow-lg' : 'bg-white text-slate-500 border-slate-100 hover:border-slate-300'}`}>{opt}</button>
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -491,9 +790,10 @@ const RegistrationForm: React.FC = () => {
                <h4 className="text-3xl font-black text-slate-900 uppercase tracking-tight">Kirim Sekarang?</h4>
                <p className="text-slate-500 font-bold mt-3 leading-relaxed">Sistem akan mengecek apakah NISN <b>{formData.nisn}</b> sudah pernah mendaftar.</p>
             </div>
-            <div className="bg-slate-50 p-10 rounded-[3.5rem] border-2 border-slate-100 text-left space-y-4 max-w-2xl mx-auto">
-               <div className="flex justify-between border-b pb-2"><span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Nama Pendaftar</span><span className="font-black text-slate-900">{formData.nama_lengkap}</span></div>
-               <div className="flex justify-between border-b pb-2"><span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">NISN</span><span className="font-black text-slate-900 tracking-widest">{formData.nisn}</span></div>
+            <div className="bg-slate-50 p-10 rounded-[3.5rem] border-2 border-slate-100 text-left space-y-4 max-w-2xl mx-auto shadow-sm">
+               <div className="flex justify-between border-b border-slate-200 pb-2"><span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Nama Pendaftar</span><span className="font-black text-slate-900">{formData.nama_lengkap}</span></div>
+               <div className="flex justify-between border-b border-slate-200 pb-2"><span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">NISN</span><span className="font-black text-slate-900 tracking-widest">{formData.nisn}</span></div>
+               <div className="flex justify-between border-b border-slate-200 pb-2"><span className="text-[10px] font-black text-emerald-600 uppercase tracking-widest flex items-center gap-1"><Calendar size={10} /> Tanggal Daftar</span><span className="font-black text-emerald-700">{new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</span></div>
             </div>
             <div className="flex justify-between pt-12 border-t-2 border-slate-100 mt-12">
               <button type="button" onClick={() => setStep(prev => prev - 1)} className="text-slate-400 px-8 py-5 font-black flex items-center gap-3 hover:text-slate-900 transition-colors"> <ArrowLeft size={20} /> Edit Lagi</button>

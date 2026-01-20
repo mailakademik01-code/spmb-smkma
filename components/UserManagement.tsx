@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../services/supabase.ts';
 import { 
@@ -16,7 +15,8 @@ import {
   Terminal,
   Copy,
   Check,
-  RefreshCw
+  RefreshCw,
+  Edit3
 } from 'lucide-react';
 
 interface AdminUser {
@@ -31,10 +31,19 @@ const UserManagement: React.FC = () => {
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [tableMissing, setTableMissing] = useState(false);
   const [copied, setCopied] = useState(false);
+
+  const [formData, setFormData] = useState({
+    username: '',
+    password: '',
+    full_name: '',
+    role: 'staff' as 'super_admin' | 'staff'
+  });
 
   const SQL_SCRIPT = `CREATE TABLE IF NOT EXISTS admin_users (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -60,7 +69,6 @@ ON CONFLICT (username) DO NOTHING;`;
         .order('created_at', { ascending: false });
       
       if (error) {
-        // Cek jika error karena tabel tidak ditemukan (PGRST116 atau 42P01)
         if (error.code === '42P01' || error.message.includes('admin_users') || error.message.includes('cache')) {
           setTableMissing(true);
           throw new Error("Tabel 'admin_users' belum dibuat di database Supabase.");
@@ -86,42 +94,83 @@ ON CONFLICT (username) DO NOTHING;`;
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleCreateUser = async (e: React.FormEvent) => {
+  const handleOpenAddModal = () => {
+    setIsEditing(false);
+    setSelectedUserId(null);
+    setFormData({ username: '', password: '', full_name: '', role: 'staff' });
+    setError(null);
+    setIsModalOpen(true);
+  };
+
+  const handleOpenEditModal = (user: AdminUser) => {
+    setIsEditing(true);
+    setSelectedUserId(user.id);
+    setFormData({ 
+      username: user.username, 
+      password: '', // Password dikosongkan saat edit kecuali mau diganti
+      full_name: user.full_name || '', 
+      role: user.role 
+    });
+    setError(null);
+    setIsModalOpen(true);
+  };
+
+  const handleSaveUser = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     setError(null);
 
     try {
-      const { error: insertError } = await supabase
-        .from('admin_users')
-        .insert([formData]);
+      if (isEditing && selectedUserId) {
+        // Logika Update
+        const updatePayload: any = {
+          full_name: formData.full_name,
+          role: formData.role
+        };
+        
+        // Hanya update username jika bukan akun 'admin' sistem
+        if (formData.username !== 'admin') {
+          updatePayload.username = formData.username;
+        }
 
-      if (insertError) throw insertError;
+        // Hanya update password jika diisi
+        if (formData.password.trim() !== '') {
+          updatePayload.password = formData.password;
+        }
+
+        const { error: updateError } = await supabase
+          .from('admin_users')
+          .update(updatePayload)
+          .eq('id', selectedUserId);
+
+        if (updateError) throw updateError;
+      } else {
+        // Logika Create Baru
+        if (!formData.password) throw new Error("Password wajib diisi untuk user baru.");
+        
+        const { error: insertError } = await supabase
+          .from('admin_users')
+          .insert([formData]);
+
+        if (insertError) throw insertError;
+      }
 
       setIsModalOpen(false);
-      setFormData({ username: '', password: '', full_name: '', role: 'staff' });
       fetchUsers();
     } catch (err: any) {
-      setError(err.message || 'Gagal membuat user baru.');
+      setError(err.message || 'Gagal menyimpan data user.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const [formData, setFormData] = useState({
-    username: '',
-    password: '',
-    full_name: '',
-    role: 'staff' as 'super_admin' | 'staff'
-  });
-
   const handleDeleteUser = async (id: string, username: string) => {
     if (username === 'admin') {
-      alert("Akun admin utama tidak dapat dihapus.");
+      alert("Akun admin utama sistem tidak dapat dihapus demi keamanan.");
       return;
     }
     
-    if (!window.confirm(`Hapus pengguna ${username}? Tindakan ini permanen.`)) return;
+    if (!window.confirm(`Hapus pengguna @${username}? Seluruh akses pendaftaran untuk akun ini akan dicabut.`)) return;
 
     try {
       const { error: deleteError } = await supabase
@@ -185,7 +234,6 @@ ON CONFLICT (username) DO NOTHING;`;
                 onClick={fetchUsers}
                 className="bg-amber-600 hover:bg-amber-700 text-white px-8 py-4 rounded-2xl font-black flex items-center gap-2 shadow-xl shadow-amber-200 transition-all active:scale-95"
               >
-                {/* Fixed: RefreshCw was missing from imports */}
                 <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
                 Sudah Saya Jalankan, Cek Lagi
               </button>
@@ -198,14 +246,14 @@ ON CONFLICT (username) DO NOTHING;`;
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight">Manajemen Pengguna</h3>
           <p className="text-sm text-slate-500 font-medium">Kelola akun administrator dan hak akses sistem SPMB.</p>
         </div>
         <button 
-          onClick={() => setIsModalOpen(true)}
-          className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-2xl font-black flex items-center gap-2 shadow-xl shadow-emerald-100 transition-all active:scale-95"
+          onClick={handleOpenAddModal}
+          className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3.5 rounded-2xl font-black flex items-center gap-2 shadow-xl shadow-emerald-100 transition-all active:scale-95 text-xs uppercase tracking-widest"
         >
           <UserPlus size={18} /> Tambah User Baru
         </button>
@@ -223,46 +271,57 @@ ON CONFLICT (username) DO NOTHING;`;
           </div>
         ) : (
           users.map((user) => (
-            <div key={user.id} className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-md transition-all group">
+            <div key={user.id} className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-md transition-all group relative overflow-hidden">
               <div className="flex justify-between items-start mb-4">
                 <div className={`p-3 rounded-2xl ${user.role === 'super_admin' ? 'bg-amber-100 text-amber-600' : 'bg-emerald-100 text-emerald-600'}`}>
                   {user.role === 'super_admin' ? <ShieldCheck size={24} /> : <Shield size={24} />}
                 </div>
-                {user.username !== 'admin' && (
+                <div className="flex items-center gap-1">
                   <button 
-                    onClick={() => handleDeleteUser(user.id, user.username)}
-                    className="p-2 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-all"
+                    onClick={() => handleOpenEditModal(user)}
+                    className="p-2.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all"
+                    title="Edit Profil User"
                   >
-                    <Trash2 size={18} />
+                    <Edit3 size={18} />
                   </button>
-                )}
+                  {user.username !== 'admin' && (
+                    <button 
+                      onClick={() => handleDeleteUser(user.id, user.username)}
+                      className="p-2.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-all"
+                      title="Hapus User"
+                    >
+                      <Trash2 size={18} />
+                    </button>
+                  )}
+                </div>
               </div>
-              <h4 className="font-black text-slate-900 text-lg mb-1">{user.full_name}</h4>
+              <h4 className="font-black text-slate-900 text-lg mb-1 leading-tight">{user.full_name}</h4>
               <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-4">@{user.username}</p>
               
               <div className="flex items-center justify-between pt-4 border-t border-slate-50">
-                <span className={`text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-tighter ${user.role === 'super_admin' ? 'bg-amber-50 text-amber-600' : 'bg-emerald-50 text-emerald-600'}`}>
+                <span className={`text-[9px] font-black px-3 py-1 rounded-full uppercase tracking-tighter ${user.role === 'super_admin' ? 'bg-amber-50 text-amber-600' : 'bg-emerald-50 text-emerald-600'}`}>
                   {user.role === 'super_admin' ? 'Super Admin' : 'Staff Admission'}
                 </span>
-                <span className="text-[10px] text-slate-300 font-medium">Sejak {new Date(user.created_at).toLocaleDateString()}</span>
+                <span className="text-[9px] text-slate-300 font-bold uppercase tracking-widest">Dibuat {new Date(user.created_at).toLocaleDateString()}</span>
               </div>
             </div>
           ))
         )}
       </div>
 
-      {/* Modal Tambah User */}
+      {/* Modal Tambah/Edit User */}
       {isModalOpen && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white w-full max-w-lg rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in duration-300">
-            <div className="bg-slate-950 p-8 text-white flex justify-between items-center">
+          <div className="bg-white w-full max-w-lg rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in duration-300 border border-white/20">
+            <div className="bg-slate-950 p-8 text-white flex justify-between items-center relative">
+              <div className="absolute top-0 left-0 w-full h-1 bg-emerald-500"></div>
               <div className="flex items-center gap-4">
-                <div className="bg-emerald-600 p-3 rounded-2xl">
-                  <UserPlus size={24} />
+                <div className="bg-emerald-600 p-3 rounded-2xl shadow-lg">
+                  {isEditing ? <Edit3 size={24} /> : <UserPlus size={24} />}
                 </div>
                 <div>
-                  <h3 className="font-black text-xl uppercase tracking-tight">User Baru</h3>
-                  <p className="text-[10px] text-emerald-400 font-bold uppercase tracking-widest">Registrasi Akun Admin</p>
+                  <h3 className="font-black text-xl uppercase tracking-tight">{isEditing ? 'Perbarui Profil' : 'User Baru'}</h3>
+                  <p className="text-[10px] text-emerald-400 font-bold uppercase tracking-widest">{isEditing ? 'Update data administrator' : 'Registrasi Akun Admin'}</p>
                 </div>
               </div>
               <button onClick={() => setIsModalOpen(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors">
@@ -270,17 +329,17 @@ ON CONFLICT (username) DO NOTHING;`;
               </button>
             </div>
 
-            <form onSubmit={handleCreateUser} className="p-8 space-y-6">
+            <form onSubmit={handleSaveUser} className="p-8 space-y-6">
               {error && (
-                <div className="bg-rose-50 border border-rose-100 p-4 rounded-2xl flex items-center gap-3 text-rose-600">
+                <div className="bg-rose-50 border border-rose-100 p-4 rounded-2xl flex items-center gap-3 text-rose-600 animate-in shake duration-300">
                   <AlertCircle size={20} className="shrink-0" />
-                  <p className="text-xs font-bold">{error}</p>
+                  <p className="text-xs font-bold leading-tight">{error}</p>
                 </div>
               )}
 
               <div className="space-y-4">
                 <div>
-                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Nama Lengkap</label>
+                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Nama Lengkap Pengguna</label>
                   <div className="relative">
                     <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                     <input
@@ -288,8 +347,8 @@ ON CONFLICT (username) DO NOTHING;`;
                       required
                       value={formData.full_name}
                       onChange={(e) => setFormData({...formData, full_name: e.target.value})}
-                      className="w-full pl-12 pr-4 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-emerald-500 font-bold transition-all"
-                      placeholder="Contoh: Budi Santoso"
+                      className="w-full pl-12 pr-4 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-emerald-500 font-bold transition-all text-sm"
+                      placeholder="Contoh: Pak Aji Santoso"
                     />
                   </div>
                 </div>
@@ -300,42 +359,45 @@ ON CONFLICT (username) DO NOTHING;`;
                     <input
                       type="text"
                       required
+                      disabled={formData.username === 'admin'}
                       value={formData.username}
-                      onChange={(e) => setFormData({...formData, username: e.target.value.toLowerCase()})}
-                      className="w-full px-4 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-emerald-500 font-bold transition-all"
-                      placeholder="user123"
+                      onChange={(e) => setFormData({...formData, username: e.target.value.toLowerCase().replace(/\s/g, '')})}
+                      className={`w-full px-4 py-4 border-2 rounded-2xl outline-none focus:border-emerald-500 font-bold transition-all text-sm ${formData.username === 'admin' ? 'bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed' : 'bg-slate-50 border-slate-100'}`}
+                      placeholder="useradm"
                     />
                   </div>
                   <div>
-                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Password</label>
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">
+                      {isEditing ? 'Ganti Password' : 'Password'}
+                    </label>
                     <div className="relative">
                       <Key className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                       <input
                         type="password"
-                        required
+                        required={!isEditing}
                         value={formData.password}
                         onChange={(e) => setFormData({...formData, password: e.target.value})}
-                        className="w-full pl-12 pr-4 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-emerald-500 font-bold transition-all"
-                        placeholder="••••••"
+                        className="w-full pl-12 pr-4 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-emerald-500 font-bold transition-all text-sm"
+                        placeholder={isEditing ? 'Kosongkan jika tetap' : '••••••'}
                       />
                     </div>
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Hak Akses (Role)</label>
+                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Hak Akses Sistem (Role)</label>
                   <div className="grid grid-cols-2 gap-3">
                     <button 
                       type="button" 
                       onClick={() => setFormData({...formData, role: 'staff'})}
-                      className={`p-4 rounded-2xl border-2 font-black text-xs flex items-center justify-center gap-2 transition-all ${formData.role === 'staff' ? 'bg-emerald-600 text-white border-emerald-600 shadow-lg' : 'bg-white text-slate-600 border-slate-100'}`}
+                      className={`p-4 rounded-2xl border-2 font-black text-[10px] uppercase flex items-center justify-center gap-2 transition-all ${formData.role === 'staff' ? 'bg-emerald-600 text-white border-emerald-600 shadow-lg' : 'bg-white text-slate-600 border-slate-100 hover:border-emerald-100'}`}
                     >
-                      <Shield size={16} /> Staff
+                      <Shield size={16} /> Staff Admission
                     </button>
                     <button 
                       type="button" 
                       onClick={() => setFormData({...formData, role: 'super_admin'})}
-                      className={`p-4 rounded-2xl border-2 font-black text-xs flex items-center justify-center gap-2 transition-all ${formData.role === 'super_admin' ? 'bg-amber-500 text-white border-amber-500 shadow-lg' : 'bg-white text-slate-600 border-slate-100'}`}
+                      className={`p-4 rounded-2xl border-2 font-black text-[10px] uppercase flex items-center justify-center gap-2 transition-all ${formData.role === 'super_admin' ? 'bg-amber-500 text-white border-amber-500 shadow-lg' : 'bg-white text-slate-600 border-slate-100 hover:border-amber-100'}`}
                     >
                       <ShieldCheck size={16} /> Super Admin
                     </button>
@@ -347,9 +409,9 @@ ON CONFLICT (username) DO NOTHING;`;
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-5 rounded-2xl font-black flex items-center justify-center gap-3 shadow-xl shadow-emerald-100 transition-all active:scale-95 disabled:opacity-50"
+                  className="w-full bg-slate-900 hover:bg-black text-white py-5 rounded-2xl font-black flex items-center justify-center gap-3 shadow-xl transition-all active:scale-95 disabled:opacity-50 text-xs uppercase tracking-widest"
                 >
-                  {isSubmitting ? <Loader2 className="animate-spin" size={24} /> : <><CheckCircle2 size={20} /> Simpan Pengguna Baru</>}
+                  {isSubmitting ? <Loader2 className="animate-spin" size={20} /> : <><CheckCircle2 size={20} /> {isEditing ? 'Simpan Perubahan' : 'Konfirmasi User Baru'}</>}
                 </button>
               </div>
             </form>
