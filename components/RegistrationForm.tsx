@@ -362,6 +362,20 @@ const RegistrationForm: React.FC = () => {
               <div><label className="block text-xs font-black text-slate-500 mb-2 uppercase tracking-wide">Kabupaten/Kota <span className="text-rose-500">*</span></label><input type="text" name="kabupaten" required value={formData.kabupaten} onChange={handleChange} className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-6 py-5 text-sm font-black" placeholder="Contoh: Kab. Tangerang" /></div>
               <div><label className="block text-xs font-black text-slate-500 mb-2 uppercase tracking-wide">Provinsi <span className="text-rose-500">*</span></label><input type="text" name="provinsi" required value={formData.provinsi} onChange={handleChange} className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-6 py-5 text-sm font-black" placeholder="Contoh: Banten" /></div>
               <div><label className="block text-xs font-black text-slate-500 mb-2 uppercase tracking-wide">Kode Pos <span className="text-rose-500">*</span></label><input type="text" name="kode_pos" required value={formData.kode_pos} onChange={handleChange} className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-6 py-5 text-sm font-black" /></div>
+              
+              <div>
+                <label className="block text-xs font-black text-slate-500 mb-2 uppercase tracking-wide">Tempat Tinggal <span className="text-rose-500">*</span></label>
+                <select name="tempat_tinggal" required value={formData.tempat_tinggal} onChange={handleChange} className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-6 py-5 text-sm font-black outline-none appearance-none">
+                  <option value="">-- Pilih --</option>
+                  <option value="Bersama orang tua">Bersama orang tua</option>
+                  <option value="Wali">Wali</option>
+                  <option value="Kos">Kos</option>
+                  <option value="Asrama">Asrama</option>
+                  <option value="Panti Asuhan">Panti Asuhan</option>
+                  <option value="Lainnya">Lainnya</option>
+                </select>
+              </div>
+
               <div>
                 <label className="block text-xs font-black text-slate-500 mb-2 uppercase tracking-wide">Moda Transportasi <span className="text-rose-500">*</span></label>
                 <select name="transportasi" required value={formData.transportasi} onChange={handleChange} className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-6 py-5 text-sm font-black outline-none">
@@ -378,7 +392,7 @@ const RegistrationForm: React.FC = () => {
                  <div className="bg-white p-3 rounded-2xl text-emerald-600 shadow-sm"><MapPin size={24}/></div>
                  <div className="text-[10px] font-black text-emerald-700 tracking-widest uppercase">Pinpoint Lokasi Rumah (GPS)</div>
               </div>
-              <button type="button" onClick={handleGeolocation} className="bg-slate-900 text-white px-6 py-3 rounded-xl text-xs font-black shadow-lg hover:bg-black transition-all"> Ambil Kordinat</button>
+              <button type="button" onClick={handleGeolocation} className="bg-slate-950 text-white px-6 py-3 rounded-xl text-xs font-black shadow-lg hover:bg-black transition-all"> Ambil Kordinat</button>
             </div>
             <div className="flex justify-between pt-6">
               <button type="button" onClick={() => setStep(prev => prev - 1)} className="text-slate-400 px-8 py-5 font-black flex items-center gap-3 hover:text-slate-900 transition-colors"> <ArrowLeft size={20} /> Kembali</button>

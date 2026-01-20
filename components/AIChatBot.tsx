@@ -7,7 +7,7 @@ import { ChatMessage } from '../types.ts';
 const AIChatBot: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([
-    { role: 'model', text: 'Halo! Saya asisten AI SMA Mathlaul Anwar Buaranjati. Ada yang bisa saya bantu terkait pendaftaran murid baru (SPMB)?' }
+    { role: 'model', text: 'Halo! Saya asisten AI SMK Mathlaul Anwar Buaranjati. Ada yang bisa saya bantu terkait pendaftaran murid baru (SPMB)?' }
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
