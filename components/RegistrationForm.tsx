@@ -160,6 +160,7 @@ const RegistrationForm: React.FC = () => {
       if (!formData.lingkar_kepala) missing.push("Lingkar Kepala");
       if (!formData.jarak_km) missing.push("Jarak (km)");
       if (!formData.waktu_jam || !formData.waktu_menit) missing.push("Waktu Tempuh");
+      if (!formData.bottom) missing.push("Waktu Tempuh");
       if (!formData.jumlah_saudara) missing.push("Jumlah Saudara");
       if (!formData.no_hp) missing.push("No. WhatsApp");
       if (!formData.email) missing.push("Email");
@@ -296,7 +297,7 @@ const RegistrationForm: React.FC = () => {
         <div className="absolute top-0 left-0 w-full h-1.5 bg-emerald-500/20">
           <div className="h-full bg-emerald-500 transition-all duration-700 ease-out shadow-[0_0_10px_#10b981]" style={{ width: `${(step / 6) * 100}%` }}></div>
         </div>
-        <div className="text-[10px] font-black text-emerald-400 uppercase tracking-[0.4em] mb-3">Sistem SPMB Terintegrasi 2025</div>
+        <div className="text-[10px] font-black text-emerald-400 uppercase tracking-[0.4em] mb-3">Sistem SPMB Terintegrasi 2026</div>
         <h2 className="text-2xl md:text-3xl font-black leading-tight uppercase tracking-tight">Seleksi Penerimaan Murid Baru</h2>
         <div className="flex justify-center gap-3 mt-8">
           {[1, 2, 3, 4, 5, 6].map(i => (

@@ -271,38 +271,47 @@ ON CONFLICT (username) DO NOTHING;`;
           </div>
         ) : (
           users.map((user) => (
-            <div key={user.id} className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-md transition-all group relative overflow-hidden">
-              <div className="flex justify-between items-start mb-4">
-                <div className={`p-3 rounded-2xl ${user.role === 'super_admin' ? 'bg-amber-100 text-amber-600' : 'bg-emerald-100 text-emerald-600'}`}>
-                  {user.role === 'super_admin' ? <ShieldCheck size={24} /> : <Shield size={24} />}
+            <div key={user.id} className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-md transition-all group relative overflow-hidden flex flex-col h-full">
+              <div className="flex justify-between items-start mb-6">
+                <div className={`p-4 rounded-2xl shadow-sm ${user.role === 'super_admin' ? 'bg-amber-100 text-amber-600' : 'bg-emerald-100 text-emerald-600'}`}>
+                  {user.role === 'super_admin' ? <ShieldCheck size={28} /> : <Shield size={28} />}
                 </div>
-                <div className="flex items-center gap-1">
-                  <button 
+                <div className="flex gap-2">
+                   <button 
                     onClick={() => handleOpenEditModal(user)}
-                    className="p-2.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all"
-                    title="Edit Profil User"
-                  >
-                    <Edit3 size={18} />
-                  </button>
-                  {user.username !== 'admin' && (
-                    <button 
+                    className="p-3 bg-slate-50 text-slate-400 hover:bg-emerald-600 hover:text-white rounded-2xl transition-all shadow-sm active:scale-90"
+                    title="Edit Profil"
+                   >
+                     <Edit3 size={18} />
+                   </button>
+                   {user.username !== 'admin' && (
+                     <button 
                       onClick={() => handleDeleteUser(user.id, user.username)}
-                      className="p-2.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-all"
-                      title="Hapus User"
-                    >
-                      <Trash2 size={18} />
-                    </button>
-                  )}
+                      className="p-3 bg-slate-50 text-slate-400 hover:bg-rose-600 hover:text-white rounded-2xl transition-all shadow-sm active:scale-90"
+                      title="Hapus Pengguna"
+                     >
+                       <Trash2 size={18} />
+                     </button>
+                   )}
                 </div>
               </div>
-              <h4 className="font-black text-slate-900 text-lg mb-1 leading-tight">{user.full_name}</h4>
-              <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-4">@{user.username}</p>
-              
-              <div className="flex items-center justify-between pt-4 border-t border-slate-50">
-                <span className={`text-[9px] font-black px-3 py-1 rounded-full uppercase tracking-tighter ${user.role === 'super_admin' ? 'bg-amber-50 text-amber-600' : 'bg-emerald-50 text-emerald-600'}`}>
-                  {user.role === 'super_admin' ? 'Super Admin' : 'Staff Admission'}
-                </span>
-                <span className="text-[9px] text-slate-300 font-bold uppercase tracking-widest">Dibuat {new Date(user.created_at).toLocaleDateString()}</span>
+
+              <div className="flex-1">
+                <h4 className="font-black text-slate-900 text-lg mb-1 leading-tight">{user.full_name}</h4>
+                <p className="text-slate-400 text-[10px] font-black uppercase tracking-[0.2em] mb-4">@{user.username}</p>
+                
+                <div className="flex flex-wrap gap-2 mb-4">
+                  <span className={`text-[9px] font-black px-3 py-1.5 rounded-xl uppercase tracking-widest ${user.role === 'super_admin' ? 'bg-amber-50 text-amber-600 border border-amber-100' : 'bg-emerald-50 text-emerald-600 border border-emerald-100'}`}>
+                    {user.role === 'super_admin' ? 'Super Admin' : 'Staff Admission'}
+                  </span>
+                </div>
+              </div>
+
+              <div className="pt-4 border-t border-slate-50 flex items-center justify-between">
+                <div className="flex items-center gap-1.5 text-slate-300">
+                   <RefreshCw size={10} />
+                   <span className="text-[9px] font-bold uppercase tracking-widest">Sejak {new Date(user.created_at).toLocaleDateString()}</span>
+                </div>
               </div>
             </div>
           ))
@@ -314,13 +323,13 @@ ON CONFLICT (username) DO NOTHING;`;
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="bg-white w-full max-w-lg rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in duration-300 border border-white/20">
             <div className="bg-slate-950 p-8 text-white flex justify-between items-center relative">
-              <div className="absolute top-0 left-0 w-full h-1 bg-emerald-500"></div>
+              <div className="absolute top-0 left-0 w-full h-1 bg-emerald-500 shadow-[0_0_10px_#10b981]"></div>
               <div className="flex items-center gap-4">
                 <div className="bg-emerald-600 p-3 rounded-2xl shadow-lg">
                   {isEditing ? <Edit3 size={24} /> : <UserPlus size={24} />}
                 </div>
                 <div>
-                  <h3 className="font-black text-xl uppercase tracking-tight">{isEditing ? 'Perbarui Profil' : 'User Baru'}</h3>
+                  <h3 className="font-black text-xl uppercase tracking-tight">{isEditing ? 'Perbarui Akun' : 'User Baru'}</h3>
                   <p className="text-[10px] text-emerald-400 font-bold uppercase tracking-widest">{isEditing ? 'Update data administrator' : 'Registrasi Akun Admin'}</p>
                 </div>
               </div>
