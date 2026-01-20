@@ -1,4 +1,3 @@
-
 import { GoogleGenAI } from "@google/genai";
 import { SCHOOL_NAME, SCHOOL_TAGLINE, CONTACT_INFO, REQUIREMENTS, DEPARTMENTS } from "../constants.tsx";
 
@@ -29,31 +28,30 @@ If asked about future jobs or career paths:
 Always respond in Indonesian. Keep answers short, direct, and welcoming. Use the term 'SPMB' instead of 'PPDB'.
 `;
 
+// Helper function to send message to Gemini Assistant
 export async function sendMessageToAssistant(message: string, history: any[] = []) {
   try {
-    const apiKey = process.env.API_KEY;
-    
-    // Validasi kunci API sebelum inisialisasi untuk mencegah library melempar error fatal
-    if (!apiKey || apiKey === '') {
-      console.warn("API_KEY Gemini belum dikonfigurasi di environment variables.");
-      return "Mohon maaf, layanan asisten AI sedang dinonaktifkan sementara oleh admin. Silakan hubungi WA kami di " + CONTACT_INFO.phone;
+    // API key MUST be obtained from process.env.API_KEY
+    if (!process.env.API_KEY) {
+      console.warn("API_KEY Gemini is not configured.");
+      return "Mohon maaf, layanan asisten AI sedang dinonaktifkan sementara. Silakan hubungi WA kami di " + CONTACT_INFO.phone;
     }
 
-    // Inisialisasi dilakukan di sini agar aplikasi tidak crash saat boot jika kunci tidak ada
-    const ai = new GoogleGenAI({ apiKey: apiKey });
+    // Always use the named parameter for API key initialization
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     
+    // Using gemini-3-flash-preview for basic text tasks
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
-      contents: [
-        { role: 'user', parts: [{ text: message }] }
-      ],
+      contents: message,
       config: {
         systemInstruction: SYSTEM_INSTRUCTION,
         temperature: 0.7,
       },
     });
 
-    return response.text;
+    // Access the .text property directly to extract the output
+    return response.text || "Maaf, saya tidak dapat memberikan jawaban saat ini.";
   } catch (error) {
     console.error("Gemini API Error:", error);
     return "Maaf, sistem sedang sibuk atau ada masalah koneksi. Silakan hubungi WA kami di " + CONTACT_INFO.phone;

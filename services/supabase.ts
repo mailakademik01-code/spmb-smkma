@@ -1,4 +1,3 @@
-
 import { createClient } from '@supabase/supabase-js';
 
 // Konfigurasi Supabase
@@ -8,103 +7,78 @@ export const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJ
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 /* 
-  ------------------------------------------------------------------
+  --------------------------------------------------------------------------------------
   PENTING: JALANKAN SQL DI BAWAH INI DI SQL EDITOR SUPABASE ANDA!
-  ------------------------------------------------------------------
+  Ini akan memperbaiki error "Could not find column transportasi_lainnya" dll.
+  --------------------------------------------------------------------------------------
 
--- 1. Tabel Registrasi Pendaftar
-CREATE TABLE IF NOT EXISTS registrations (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  submitted_at TIMESTAMPTZ DEFAULT now(),
-  jurusan TEXT,
-  ukuran_seragam TEXT,
-  nama_lengkap TEXT,
-  jenis_kelamin TEXT,
-  nisn TEXT,
-  nik TEXT,
-  no_kk TEXT,
-  tempat_lahir TEXT,
-  tanggal_lahir DATE,
-  no_akta TEXT,
-  agama TEXT,
-  berkebutuhan_khusus TEXT,
-  alamat_jalan TEXT,
-  rt TEXT,
-  rw TEXT,
-  dusun TEXT,
-  kelurahan TEXT,
-  kecamatan TEXT,
-  kode_pos TEXT,
-  lintang TEXT,
-  bujur TEXT,
-  tempat_tinggal TEXT,
-  transportasi TEXT,
-  no_kks TEXT,
-  anak_ke TEXT,
-  penerima_kip TEXT,
-  no_kip TEXT,
-  nama_ayah TEXT,
-  nik_ayah TEXT,
-  tahun_lahir_ayah TEXT,
-  pendidikan_ayah TEXT,
-  pekerjaan_ayah TEXT,
-  penghasilan_ayah TEXT,
-  khusus_ayah TEXT,
-  nama_ibu TEXT,
-  nik_ibu TEXT,
-  tahun_lahir_ibu TEXT,
-  pendidikan_ibu TEXT,
-  pekerjaan_ibu TEXT,
-  penghasilan_ibu TEXT,
-  khusus_ibu TEXT,
-  nama_wali TEXT,
-  nik_wali TEXT,
-  tahun_lahir_wali TEXT,
-  pendidikan_wali TEXT,
-  pekerjaan_wali TEXT,
-  penghasilan_wali TEXT,
-  telp_rumah TEXT,
-  no_hp TEXT,
-  email TEXT,
-  tinggi_badan TEXT,
-  berat_badan TEXT,
-  lingkar_kepala TEXT,
-  jarak_sekolah TEXT,
-  jarak_km TEXT,
-  waktu_jam TEXT,
-  waktu_menit TEXT,
-  jumlah_saudara TEXT,
-  status TEXT DEFAULT 'pending'
-);
+  ALTER TABLE registrations 
+  ADD COLUMN IF NOT EXISTS kewarganegaraan TEXT DEFAULT 'WNI',
+  ADD COLUMN IF NOT EXISTS negara_wna TEXT,
+  ADD COLUMN IF NOT EXISTS kabupaten TEXT,
+  ADD COLUMN IF NOT EXISTS provinsi TEXT,
+  ADD COLUMN IF NOT EXISTS tempat_tinggal TEXT,
+  ADD COLUMN IF NOT EXISTS transportasi_lainnya TEXT,
+  ADD COLUMN IF NOT EXISTS jarak_km TEXT,
+  ADD COLUMN IF NOT EXISTS waktu_jam TEXT,
+  ADD COLUMN IF NOT EXISTS waktu_menit TEXT,
+  ADD COLUMN IF NOT EXISTS jumlah_saudara TEXT,
+  ADD COLUMN IF NOT EXISTS no_kks TEXT,
+  ADD COLUMN IF NOT EXISTS anak_ke TEXT,
+  ADD COLUMN IF NOT EXISTS penerima_kip TEXT,
+  ADD COLUMN IF NOT EXISTS no_kip TEXT;
 
--- 2. Tabel Manajemen Admin/Staff
-CREATE TABLE IF NOT EXISTS admin_users (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  created_at TIMESTAMPTZ DEFAULT now(),
-  username TEXT UNIQUE NOT NULL,
-  password TEXT NOT NULL,
-  full_name TEXT,
-  role TEXT DEFAULT 'staff'
-);
-
--- 3. Tabel Pengaturan Jurusan (Logo & Ikon)
-CREATE TABLE IF NOT EXISTS major_settings (
-  code TEXT PRIMARY KEY, -- 'DKV' or 'TKR'
-  name TEXT,
-  description TEXT,
-  logo_url TEXT, -- URL Gambar custom
-  color_hex TEXT DEFAULT '#10b981'
-);
-
--- 4. Inisialisasi Data Jurusan Default
-INSERT INTO major_settings (code, name, description, color_hex)
-VALUES 
-('DKV', 'Desain Komunikasi Visual', 'Mengembangkan kreativitas di bidang desain grafis, multimedia, fotografi, dan komunikasi visual.', '#8b5cf6'),
-('TKR', 'Teknik Kendaraan Ringan', 'Mendalami kompetensi teknisi otomotif profesional khusus kendaraan roda empat.', '#3b82f6')
-ON CONFLICT (code) DO NOTHING;
-
--- 5. Masukkan Akun Admin Default
-INSERT INTO admin_users (username, password, full_name, role) 
-VALUES ('admin', 'smkma@2026', 'Administrator Utama', 'super_admin')
-ON CONFLICT (username) DO NOTHING;
+  --------------------------------------------------------------------------------------
+  CATATAN: Jika pendaftaran masih gagal setelah menjalankan ALTER di atas, 
+  Anda mungkin perlu mereset tabel (PERINGATAN: HAPUS SEMUA DATA LAMA):
+  
+  DROP TABLE IF EXISTS registrations;
+  CREATE TABLE registrations (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    submitted_at TIMESTAMPTZ DEFAULT now(),
+    jurusan TEXT,
+    ukuran_seragam TEXT,
+    nama_lengkap TEXT,
+    jenis_kelamin TEXT,
+    nisn TEXT UNIQUE,
+    nik TEXT,
+    no_kk TEXT,
+    tempat_lahir TEXT,
+    tanggal_lahir DATE,
+    no_akta TEXT,
+    agama TEXT,
+    kewarganegaraan TEXT DEFAULT 'WNI',
+    negara_wna TEXT,
+    berkebutuhan_khusus TEXT,
+    alamat_jalan TEXT,
+    rt TEXT,
+    rw TEXT,
+    dusun TEXT,
+    kelurahan TEXT,
+    kecamatan TEXT,
+    kabupaten TEXT,
+    provinsi TEXT,
+    kode_pos TEXT,
+    lintang TEXT,
+    bujur TEXT,
+    tempat_tinggal TEXT,
+    transportasi TEXT,
+    transportasi_lainnya TEXT,
+    nama_ayah TEXT,
+    nik_ayah TEXT,
+    tahun_lahir_ayah TEXT,
+    nama_ibu TEXT,
+    nik_ibu TEXT,
+    tahun_lahir_ibu TEXT,
+    no_hp TEXT,
+    email TEXT,
+    tinggi_badan TEXT,
+    berat_badan TEXT,
+    lingkar_kepala TEXT,
+    jarak_km TEXT,
+    waktu_jam TEXT,
+    waktu_menit TEXT,
+    jumlah_saudara TEXT,
+    status TEXT DEFAULT 'pending'
+  );
 */

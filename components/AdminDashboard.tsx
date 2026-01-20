@@ -26,7 +26,12 @@ import {
   Calendar,
   Settings,
   ShieldAlert,
-  Sliders
+  Sliders,
+  Mail,
+  Scale,
+  Ruler,
+  Navigation,
+  Timer
 } from 'lucide-react';
 import UserManagement from './UserManagement.tsx';
 import MajorSettings from './MajorSettings.tsx';
@@ -61,31 +66,18 @@ interface Registration {
   bujur: string;
   tempat_tinggal: string;
   transportasi: string;
+  transportasi_lainnya: string;
   nama_ayah: string;
   nik_ayah: string;
   tahun_lahir_ayah: string;
-  pendidikan_ayah: string;
-  pekerjaan_ayah: string;
-  penghasilan_ayah: string;
   nama_ibu: string;
   nik_ibu: string;
   tahun_lahir_ibu: string;
-  pendidikan_ibu: string;
-  pekerjaan_ibu: string;
-  penghasilan_ibu: string;
-  nama_wali: string;
-  nik_wali: string;
-  tahun_lahir_wali: string;
-  pendidikan_wali: string;
-  pekerjaan_wali: string;
-  penghasilan_wali: string;
-  telp_rumah: string;
   no_hp: string;
   email: string;
   tinggi_badan: string;
   berat_badan: string;
   lingkar_kepala: string;
-  jarak_sekolah: string;
   jarak_km: string;
   waktu_jam: string;
   waktu_menit: string;
@@ -355,7 +347,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ adminProfile }) => {
 
       {selectedReg && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white w-full max-w-5xl max-h-[90vh] rounded-[2rem] shadow-2xl overflow-hidden flex flex-col animate-in zoom-in duration-300 border border-white/20">
+          <div className="bg-white w-full max-w-5xl max-h-[90vh] rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col animate-in zoom-in duration-300 border border-white/20">
             <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-900 text-white">
               <div className="flex items-center gap-4">
                  <div className="bg-emerald-600 p-3 rounded-2xl shadow-lg shadow-emerald-900/20"><User size={24} /></div>
@@ -372,7 +364,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ adminProfile }) => {
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-8 space-y-10 bg-slate-50/30">
+            <div className="flex-1 overflow-y-auto p-8 space-y-12 bg-slate-50/30">
+               {/* Identitas Diri */}
                <div className="space-y-4">
                   <h4 className="text-xs font-black text-emerald-600 uppercase flex items-center gap-2 tracking-widest border-b border-emerald-100 pb-2">
                     <User size={14}/> 1. Identitas Calon Murid (Sistem SPMB)
@@ -395,6 +388,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ adminProfile }) => {
                   </div>
                </div>
 
+               {/* Alamat & Lokasi */}
                <div className="space-y-4">
                   <h4 className="text-xs font-black text-emerald-600 uppercase flex items-center gap-2 tracking-widest border-b border-emerald-100 pb-2">
                     <Home size={14}/> 2. Alamat & Tempat Tinggal
@@ -411,7 +405,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ adminProfile }) => {
                     <DetailItem label="Provinsi" value={selectedReg.provinsi} />
                     <DetailItem label="Kode Pos" value={selectedReg.kode_pos} />
                     <DetailItem label="Tempat Tinggal" value={selectedReg.tempat_tinggal} />
-                    <DetailItem label="Moda Transportasi" value={selectedReg.transportasi} />
+                    <DetailItem label="Moda Transportasi" value={`${selectedReg.transportasi} ${selectedReg.transportasi_lainnya ? '('+selectedReg.transportasi_lainnya+')' : ''}`} />
                     <div className="md:col-span-2 p-4 bg-white border border-slate-100 rounded-2xl flex items-center gap-4 shadow-sm">
                        <div className="bg-slate-100 p-2 rounded-xl text-slate-500"><MapPin size={20}/></div>
                        <div>
@@ -422,6 +416,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ adminProfile }) => {
                   </div>
                </div>
                
+               {/* Data Orang Tua */}
                <div className="space-y-6">
                   <h4 className="text-xs font-black text-emerald-600 uppercase flex items-center gap-2 tracking-widest border-b border-emerald-100 pb-2">
                     <UsersIcon size={14}/> 3. Data Orang Tua / Wali
@@ -433,9 +428,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ adminProfile }) => {
                            <DetailItem label="Nama Ayah" value={selectedReg.nama_ayah} />
                            <DetailItem label="NIK Ayah" value={selectedReg.nik_ayah} />
                            <DetailItem label="Tahun Lahir" value={selectedReg.tahun_lahir_ayah} />
-                           <DetailItem label="Pendidikan" value={selectedReg.pendidikan_ayah} />
-                           <DetailItem label="Pekerjaan" value={selectedReg.pekerjaan_ayah} />
-                           <DetailItem label="Penghasilan" value={selectedReg.penghasilan_ayah} />
                         </div>
                      </div>
                      <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm space-y-4">
@@ -444,20 +436,69 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ adminProfile }) => {
                            <DetailItem label="Nama Ibu" value={selectedReg.nama_ibu} />
                            <DetailItem label="NIK Ibu" value={selectedReg.nik_ibu} />
                            <DetailItem label="Tahun Lahir" value={selectedReg.tahun_lahir_ibu} />
-                           <DetailItem label="Pendidikan" value={selectedReg.pendidikan_ibu} />
-                           <DetailItem label="Pekerjaan" value={selectedReg.pekerjaan_ibu} />
-                           <DetailItem label="Penghasilan" value={selectedReg.penghasilan_ibu} />
                         </div>
                      </div>
-                     <div className="bg-white p-6 rounded-3xl border border-amber-100 shadow-sm space-y-4 lg:col-span-2">
-                        <div className="flex items-center gap-2 text-[10px] font-black text-amber-700 uppercase tracking-widest border-l-4 border-amber-500 pl-2 mb-2">Data Wali</div>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-                           <DetailItem label="Nama Wali" value={selectedReg.nama_wali} />
-                           <DetailItem label="NIK Wali" value={selectedReg.nik_wali} />
-                           <DetailItem label="Tahun Lahir" value={selectedReg.tahun_lahir_wali} />
-                           <DetailItem label="Pendidikan" value={selectedReg.pendidikan_wali} />
-                           <DetailItem label="Pekerjaan" value={selectedReg.pekerjaan_wali} />
-                           <DetailItem label="Penghasilan" value={selectedReg.penghasilan_wali} />
+                  </div>
+               </div>
+
+               {/* Data Periodik & Kontak */}
+               <div className="space-y-4">
+                  <h4 className="text-xs font-black text-emerald-600 uppercase flex items-center gap-2 tracking-widest border-b border-emerald-100 pb-2">
+                    <Heart size={14}/> 4. Data Periodik, Fisik & Kontak
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                     {/* Fisik */}
+                     <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm space-y-6">
+                        <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest border-b pb-2">Data Fisik</div>
+                        <div className="flex justify-between items-center">
+                           <div className="flex items-center gap-3">
+                              <Ruler className="text-emerald-500" size={18}/>
+                              <DetailItem label="Tinggi" value={`${selectedReg.tinggi_badan} cm`} />
+                           </div>
+                           <div className="flex items-center gap-3">
+                              <Scale className="text-emerald-500" size={18}/>
+                              <DetailItem label="Berat" value={`${selectedReg.berat_badan} kg`} />
+                           </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                           <User className="text-emerald-500" size={18}/>
+                           <DetailItem label="Lingkar Kepala" value={`${selectedReg.lingkar_kepala} cm`} />
+                        </div>
+                     </div>
+
+                     {/* Periodik Jarak */}
+                     <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm space-y-6">
+                        <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest border-b pb-2">Jarak & Waktu</div>
+                        <div className="flex items-center gap-3">
+                           <Navigation className="text-emerald-500" size={18}/>
+                           <DetailItem label="Jarak ke Sekolah" value={`${selectedReg.jarak_km} KM`} />
+                        </div>
+                        <div className="flex items-center gap-3">
+                           <Timer className="text-emerald-500" size={18}/>
+                           <DetailItem label="Waktu Tempuh" value={`${selectedReg.waktu_jam} Jam ${selectedReg.waktu_menit} Menit`} />
+                        </div>
+                        <div className="flex items-center gap-3">
+                           <UsersIcon className="text-emerald-500" size={18}/>
+                           <DetailItem label="Jumlah Saudara" value={`${selectedReg.jumlah_saudara}`} />
+                        </div>
+                     </div>
+
+                     {/* Kontak */}
+                     <div className="bg-slate-900 p-6 rounded-3xl shadow-xl space-y-6">
+                        <div className="text-[10px] font-black text-emerald-400 uppercase tracking-widest border-b border-white/10 pb-2">Kontak Aktif</div>
+                        <div className="flex items-center gap-4">
+                           <div className="bg-emerald-500 p-2 rounded-xl text-white shadow-lg shadow-emerald-500/20"><Phone size={18}/></div>
+                           <div className="space-y-1">
+                              <p className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest">No. WhatsApp</p>
+                              <p className="text-sm font-black text-white">{selectedReg.no_hp}</p>
+                           </div>
+                        </div>
+                        <div className="flex items-center gap-4">
+                           <div className="bg-blue-500 p-2 rounded-xl text-white shadow-lg shadow-blue-500/20"><Mail size={18}/></div>
+                           <div className="space-y-1">
+                              <p className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest">Email</p>
+                              <p className="text-sm font-black text-white">{selectedReg.email}</p>
+                           </div>
                         </div>
                      </div>
                   </div>
@@ -496,7 +537,7 @@ const StatsCard = ({ title, value, icon, color }: { title: string, value: number
 const DetailItem = ({ label, value }: { label: string, value: string | null | undefined }) => (
   <div className="space-y-1">
     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{label}</p>
-    <p className="text-sm font-black text-slate-800 leading-tight">{value && value !== '' && value !== 'undefined' ? value : <span className="text-slate-300 font-normal italic">Tidak diisi</span>}</p>
+    <p className="text-sm font-black text-slate-800 leading-tight">{value && value !== '' && value !== 'undefined' && !value.includes('undefined') ? value : <span className="text-slate-300 font-normal italic">Tidak diisi</span>}</p>
   </div>
 );
 

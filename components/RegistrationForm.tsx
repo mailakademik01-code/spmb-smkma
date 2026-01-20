@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { MapPin, CheckCircle, ArrowRight, ArrowLeft, Loader2, User, Home, FileText, Printer, Globe, Bus, Users, Heart, ClipboardList, AlertTriangle, X, Clock as ClockIcon } from 'lucide-react';
 import { supabase } from '../services/supabase.ts';
@@ -10,7 +9,6 @@ const RegistrationForm: React.FC = () => {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
-    // A. Data Pribadi
     jurusan: '',
     ukuran_seragam: '',
     nama_lengkap: '',
@@ -25,8 +23,6 @@ const RegistrationForm: React.FC = () => {
     kewarganegaraan: 'WNI',
     negara_wna: '',
     berkebutuhan_khusus: [] as string[],
-    
-    // B. Alamat
     alamat_jalan: '',
     rt: '',
     rw: '',
@@ -41,32 +37,23 @@ const RegistrationForm: React.FC = () => {
     tempat_tinggal: '',
     transportasi: '',
     transportasi_lainnya: '',
-    anak_ke: '',
-    penerima_kip: '',
-    no_kip: '',
-
-    // Data Orang Tua & Wali
-    nama_ayah: '', nik_ayah: '', tahun_lahir_ayah: '', pendidikan_ayah: '', pekerjaan_ayah: '', penghasilan_ayah: '', khusus_ayah: 'Tidak',
-    nama_ibu: '', nik_ibu: '', tahun_lahir_ibu: '', pendidikan_ibu: '', pekerjaan_ibu: '', penghasilan_ibu: '', khusus_ibu: 'Tidak',
-    nama_wali: '', nik_wali: '', tahun_lahir_wali: '', pendidikan_wali: '', pekerjaan_wali: '', penghasilan_wali: '',
-    
-    // Kontak
-    telp_rumah: '',
+    nama_ayah: '',
+    nik_ayah: '',
+    tahun_lahir_ayah: '',
+    nama_ibu: '',
+    nik_ibu: '',
+    tahun_lahir_ibu: '',
     no_hp: '',
     email: '',
-
-    // Data Periodik
     tinggi_badan: '',
     berat_badan: '',
     lingkar_kepala: '',
-    jarak_sekolah: '', 
     jarak_km: '',
     waktu_jam: '',
     waktu_menit: '',
     jumlah_saudara: ''
   });
 
-  // Clear error message after some time or when changing input
   useEffect(() => {
     if (errorMsg) {
       const timer = setTimeout(() => setErrorMsg(null), 8000);
@@ -166,7 +153,6 @@ const RegistrationForm: React.FC = () => {
     
     setIsSubmitting(true);
     try {
-      // VALIDASI DUPLIKASI: Cek apakah NISN sudah terdaftar
       const { data: existing, error: checkError } = await supabase
         .from('registrations')
         .select('id')
@@ -176,23 +162,31 @@ const RegistrationForm: React.FC = () => {
       if (checkError) throw checkError;
 
       if (existing) {
-        setErrorMsg("❌ Pendaftaran Gagal! NISN ini (" + formData.nisn + ") sudah terdaftar sebelumnya. Anda hanya diperbolehkan mendaftar satu kali di sistem SPMB.");
+        setErrorMsg("❌ Pendaftaran Gagal! NISN ini (" + formData.nisn + ") sudah terdaftar sebelumnya.");
         setIsSubmitting(false);
         setStep(1); 
         return;
       }
 
+      // Pastikan data yang dikirim sinkron dengan schema database
+      const payload = {
+        ...formData,
+        berkebutuhan_khusus: formData.berkebutuhan_khusus.join(','),
+        submitted_at: new Date().toISOString()
+      };
+
+      // Kirim data ke Supabase
       const { error } = await supabase
         .from('registrations')
-        .insert([
-          { 
-            ...formData, 
-            berkebutuhan_khusus: formData.berkebutuhan_khusus.join(','),
-            submitted_at: new Date().toISOString() 
-          }
-        ]);
+        .insert([payload]);
 
-      if (error) throw error;
+      if (error) {
+        if (error.message.includes('column') || error.message.includes('not found')) {
+          throw new Error(`Kolom '${error.message.split("'")[1]}' tidak ditemukan di database. Pastikan sudah menjalankan perintah ALTER TABLE di SQL Editor Supabase.`);
+        }
+        throw error;
+      }
+      
       setIsSuccess(true);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (error: any) {
@@ -209,7 +203,7 @@ const RegistrationForm: React.FC = () => {
           <CheckCircle size={56} />
         </div>
         <h3 className="text-3xl font-black text-slate-900 mb-4 uppercase tracking-tight">Pendaftaran SPMB Sukses!</h3>
-        <p className="text-slate-500 mb-10 max-w-lg mx-auto font-medium leading-relaxed">Selamat! Anda sudah resmi terdaftar di sistem SPMB. Anda tidak dapat melakukan pendaftaran ulang dengan NISN yang sama.</p>
+        <p className="text-slate-500 mb-10 max-w-lg mx-auto font-medium leading-relaxed">Selamat! Anda sudah resmi terdaftar di sistem SPMB.</p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
           <button onClick={handlePrint} className="w-full sm:w-auto bg-slate-900 text-white px-10 py-5 rounded-2xl font-black flex items-center justify-center gap-3 shadow-2xl shadow-slate-200 hover:bg-black transition-all active:scale-95">
             <Printer size={20} /> Cetak Bukti Pendaftaran
@@ -274,7 +268,6 @@ const RegistrationForm: React.FC = () => {
                 <div>
                   <label className="block text-xs font-black text-slate-500 mb-2 uppercase tracking-wide">Nomor NISN (10 Digit) <span className="text-rose-500">*</span></label>
                   <input type="text" name="nisn" required value={formData.nisn} onChange={handleChange} className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-6 py-5 text-sm font-black tracking-widest" maxLength={10} placeholder="0012345678" />
-                  <p className="text-[9px] text-slate-400 mt-2 italic">* NISN digunakan untuk validasi pendaftaran tunggal di sistem SPMB.</p>
                 </div>
                 <div>
                   <label className="block text-xs font-black text-slate-500 mb-2 uppercase tracking-wide">NIK / No. KTP <span className="text-rose-500">*</span></label>
@@ -433,14 +426,12 @@ const RegistrationForm: React.FC = () => {
           <div className="space-y-10 animate-in slide-in-from-right duration-300">
             <h4 className="text-xs font-black text-emerald-600 flex items-center gap-3 uppercase tracking-widest border-b border-emerald-100 pb-3"><Heart size={20} /> 5. Data Periodik, Fisik & Kontak</h4>
             
-            {/* Data Fisik */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 bg-slate-50 p-8 rounded-[2.5rem] border-2 border-slate-100 shadow-inner">
               <div><label className="block text-[10px] font-black text-slate-400 mb-2 uppercase tracking-widest">Tinggi (cm) <span className="text-rose-500">*</span></label><input type="number" name="tinggi_badan" required value={formData.tinggi_badan} onChange={handleChange} className="w-full bg-white border-2 border-slate-100 rounded-2xl px-5 py-4 text-lg font-black text-emerald-600" /></div>
               <div><label className="block text-[10px] font-black text-slate-400 mb-2 uppercase tracking-widest">Berat (kg) <span className="text-rose-500">*</span></label><input type="number" name="berat_badan" required value={formData.berat_badan} onChange={handleChange} className="w-full bg-white border-2 border-slate-100 rounded-2xl px-5 py-4 text-lg font-black text-emerald-600" /></div>
               <div><label className="block text-[10px] font-black text-slate-400 mb-2 uppercase tracking-widest">Lingkar Kepala <span className="text-rose-500">*</span></label><input type="number" name="lingkar_kepala" required value={formData.lingkar_kepala} onChange={handleChange} className="w-full bg-white border-2 border-slate-100 rounded-2xl px-5 py-4 text-lg font-black" /></div>
             </div>
 
-            {/* Data Periodik (Jarak & Waktu Tempuh) */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 bg-emerald-50/50 p-8 rounded-[2.5rem] border-2 border-emerald-100 shadow-sm">
               <div className="space-y-4">
                 <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2">
@@ -473,21 +464,20 @@ const RegistrationForm: React.FC = () => {
               </div>
             </div>
 
-            {/* Kontak Aktif */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 bg-slate-900 p-10 rounded-[3rem] shadow-2xl">
                <div>
                  <label className="block text-[10px] font-black text-emerald-400 mb-3 uppercase tracking-widest">WhatsApp Aktif <span className="text-rose-400">*</span></label>
                  <input type="text" name="no_hp" required value={formData.no_hp} onChange={handleChange} className="w-full bg-white/10 border-2 border-white/10 rounded-2xl px-8 py-6 text-xl font-black text-white outline-none focus:border-emerald-500 transition-all" placeholder="08..." />
                </div>
                <div>
-                 <label className="block text-[10px] font-black text-emerald-400 mb-3 uppercase tracking-widest">Alamat Email <span className="text-rose-400">*</span></label>
+                 <label className="block text-[10px] font-black text-emerald-400 mb-3 uppercase tracking-widest">Email <span className="text-rose-400">*</span></label>
                  <input type="email" name="email" required value={formData.email} onChange={handleChange} className="w-full bg-white/10 border-2 border-white/10 rounded-2xl px-8 py-6 text-xl font-black text-white outline-none focus:border-emerald-500 transition-all" placeholder="nama@email.com" />
                </div>
             </div>
 
             <div className="flex justify-between pt-6">
               <button type="button" onClick={() => setStep(prev => prev - 1)} className="text-slate-400 px-8 py-5 font-black flex items-center gap-3 hover:text-slate-900 transition-colors"> <ArrowLeft size={20} /> Kembali</button>
-              <button type="button" onClick={handleNext} className="bg-emerald-600 text-white px-12 py-5 rounded-3xl font-black flex items-center gap-3 hover:bg-emerald-700 shadow-xl shadow-emerald-100 active:scale-95">Tinjau Data SPMB <ArrowRight size={20} /></button>
+              <button type="button" onClick={handleNext} className="bg-emerald-600 text-white px-12 py-5 rounded-3xl font-black flex items-center gap-3 hover:bg-emerald-700 shadow-xl shadow-emerald-100 active:scale-95">Tinjau Data <ArrowRight size={20} /></button>
             </div>
           </div>
         )}
@@ -499,17 +489,16 @@ const RegistrationForm: React.FC = () => {
             </div>
             <div>
                <h4 className="text-3xl font-black text-slate-900 uppercase tracking-tight">Kirim Sekarang?</h4>
-               <p className="text-slate-500 font-bold mt-3 leading-relaxed">Sistem akan mengecek apakah NISN <b>{formData.nisn}</b> sudah pernah mendaftar di sistem SPMB.<br/>Jika sudah, pendaftaran ini akan ditolak otomatis oleh sistem.</p>
+               <p className="text-slate-500 font-bold mt-3 leading-relaxed">Sistem akan mengecek apakah NISN <b>{formData.nisn}</b> sudah pernah mendaftar.</p>
             </div>
             <div className="bg-slate-50 p-10 rounded-[3.5rem] border-2 border-slate-100 text-left space-y-4 max-w-2xl mx-auto">
                <div className="flex justify-between border-b pb-2"><span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Nama Pendaftar</span><span className="font-black text-slate-900">{formData.nama_lengkap}</span></div>
                <div className="flex justify-between border-b pb-2"><span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">NISN</span><span className="font-black text-slate-900 tracking-widest">{formData.nisn}</span></div>
-               <div className="flex justify-between border-b pb-2"><span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">WhatsApp</span><span className="font-black text-emerald-700">{formData.no_hp}</span></div>
             </div>
             <div className="flex justify-between pt-12 border-t-2 border-slate-100 mt-12">
               <button type="button" onClick={() => setStep(prev => prev - 1)} className="text-slate-400 px-8 py-5 font-black flex items-center gap-3 hover:text-slate-900 transition-colors"> <ArrowLeft size={20} /> Edit Lagi</button>
               <button type="submit" disabled={isSubmitting} className="bg-emerald-600 text-white px-16 py-6 rounded-[2.5rem] font-black flex items-center gap-4 hover:bg-emerald-700 disabled:opacity-50 shadow-2xl shadow-emerald-200 transition-all active:scale-95">
-                {isSubmitting ? <><Loader2 className="animate-spin" size={28} /> Memeriksa Data...</> : 'Konfirmasi Pendaftaran SPMB'}
+                {isSubmitting ? <><Loader2 className="animate-spin" size={28} /> Memproses...</> : 'Konfirmasi Pendaftaran'}
               </button>
             </div>
           </div>
