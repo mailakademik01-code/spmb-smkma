@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { MapPin, CheckCircle, ArrowRight, ArrowLeft, Loader2, User, Home, FileText, Printer, Globe, Bus, Users, Heart, ClipboardList, AlertTriangle, X } from 'lucide-react';
+import { MapPin, CheckCircle, ArrowRight, ArrowLeft, Loader2, User, Home, FileText, Printer, Globe, Bus, Users, Heart, ClipboardList, AlertTriangle, X, Clock as ClockIcon } from 'lucide-react';
 import { supabase } from '../services/supabase.ts';
 
 const RegistrationForm: React.FC = () => {
@@ -431,22 +431,60 @@ const RegistrationForm: React.FC = () => {
 
         {step === 5 && (
           <div className="space-y-10 animate-in slide-in-from-right duration-300">
-            <h4 className="text-xs font-black text-emerald-600 flex items-center gap-3 uppercase tracking-widest border-b border-emerald-100 pb-3"><Heart size={20} /> 5. Data Fisik & Kontak Aktif</h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 bg-slate-50 p-10 rounded-[3rem] border-2 border-slate-100 shadow-inner">
-              <div><label className="block text-[10px] font-black text-slate-400 mb-3 uppercase tracking-widest">Tinggi (cm) <span className="text-rose-500">*</span></label><input type="number" name="tinggi_badan" required value={formData.tinggi_badan} onChange={handleChange} className="w-full bg-white border-2 border-slate-100 rounded-2xl px-6 py-5 text-lg font-black text-emerald-600" /></div>
-              <div><label className="block text-[10px] font-black text-slate-400 mb-3 uppercase tracking-widest">Berat (kg) <span className="text-rose-500">*</span></label><input type="number" name="berat_badan" required value={formData.berat_badan} onChange={handleChange} className="w-full bg-white border-2 border-slate-100 rounded-2xl px-6 py-5 text-lg font-black text-emerald-600" /></div>
-              <div><label className="block text-[10px] font-black text-slate-400 mb-3 uppercase tracking-widest">Lingkar Kepala <span className="text-rose-500">*</span></label><input type="number" name="lingkar_kepala" required value={formData.lingkar_kepala} onChange={handleChange} className="w-full bg-white border-2 border-slate-100 rounded-2xl px-6 py-5 text-lg font-black" /></div>
+            <h4 className="text-xs font-black text-emerald-600 flex items-center gap-3 uppercase tracking-widest border-b border-emerald-100 pb-3"><Heart size={20} /> 5. Data Periodik, Fisik & Kontak</h4>
+            
+            {/* Data Fisik */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 bg-slate-50 p-8 rounded-[2.5rem] border-2 border-slate-100 shadow-inner">
+              <div><label className="block text-[10px] font-black text-slate-400 mb-2 uppercase tracking-widest">Tinggi (cm) <span className="text-rose-500">*</span></label><input type="number" name="tinggi_badan" required value={formData.tinggi_badan} onChange={handleChange} className="w-full bg-white border-2 border-slate-100 rounded-2xl px-5 py-4 text-lg font-black text-emerald-600" /></div>
+              <div><label className="block text-[10px] font-black text-slate-400 mb-2 uppercase tracking-widest">Berat (kg) <span className="text-rose-500">*</span></label><input type="number" name="berat_badan" required value={formData.berat_badan} onChange={handleChange} className="w-full bg-white border-2 border-slate-100 rounded-2xl px-5 py-4 text-lg font-black text-emerald-600" /></div>
+              <div><label className="block text-[10px] font-black text-slate-400 mb-2 uppercase tracking-widest">Lingkar Kepala <span className="text-rose-500">*</span></label><input type="number" name="lingkar_kepala" required value={formData.lingkar_kepala} onChange={handleChange} className="w-full bg-white border-2 border-slate-100 rounded-2xl px-5 py-4 text-lg font-black" /></div>
             </div>
+
+            {/* Data Periodik (Jarak & Waktu Tempuh) */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 bg-emerald-50/50 p-8 rounded-[2.5rem] border-2 border-emerald-100 shadow-sm">
+              <div className="space-y-4">
+                <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2">
+                  <MapPin size={14} className="text-emerald-600" /> Jarak Rumah ke Sekolah (km) <span className="text-rose-500">*</span>
+                </label>
+                <input type="number" name="jarak_km" required value={formData.jarak_km} onChange={handleChange} className="w-full bg-white border-2 border-slate-200 rounded-2xl px-6 py-4 text-lg font-black text-slate-800 outline-none focus:border-emerald-500" placeholder="Contoh: 5" />
+              </div>
+              
+              <div className="space-y-4">
+                <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2">
+                  <ClockIcon size={14} className="text-emerald-600" /> Waktu Tempuh (Jam & Menit) <span className="text-rose-500">*</span>
+                </label>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="relative">
+                    <input type="number" name="waktu_jam" required value={formData.waktu_jam} onChange={handleChange} className="w-full bg-white border-2 border-slate-200 rounded-2xl px-6 py-4 text-lg font-black text-slate-800 outline-none focus:border-emerald-500" placeholder="Jam" />
+                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-slate-300 uppercase">Jam</span>
+                  </div>
+                  <div className="relative">
+                    <input type="number" name="waktu_menit" required value={formData.waktu_menit} onChange={handleChange} className="w-full bg-white border-2 border-slate-200 rounded-2xl px-6 py-4 text-lg font-black text-slate-800 outline-none focus:border-emerald-500" placeholder="Menit" />
+                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-slate-300 uppercase">Min</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="md:col-span-2 space-y-4">
+                <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2">
+                  <Users size={14} className="text-emerald-600" /> Jumlah Saudara Kandung <span className="text-rose-500">*</span>
+                </label>
+                <input type="number" name="jumlah_saudara" required value={formData.jumlah_saudara} onChange={handleChange} className="w-full bg-white border-2 border-slate-200 rounded-2xl px-6 py-4 text-lg font-black text-slate-800 outline-none focus:border-emerald-500" placeholder="Contoh: 2" />
+              </div>
+            </div>
+
+            {/* Kontak Aktif */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 bg-slate-900 p-10 rounded-[3rem] shadow-2xl">
                <div>
-                 <label className="block text-[10px] font-black text-emerald-400 mb-3 uppercase tracking-widest">WhatsApp <span className="text-rose-400">*</span></label>
+                 <label className="block text-[10px] font-black text-emerald-400 mb-3 uppercase tracking-widest">WhatsApp Aktif <span className="text-rose-400">*</span></label>
                  <input type="text" name="no_hp" required value={formData.no_hp} onChange={handleChange} className="w-full bg-white/10 border-2 border-white/10 rounded-2xl px-8 py-6 text-xl font-black text-white outline-none focus:border-emerald-500 transition-all" placeholder="08..." />
                </div>
                <div>
-                 <label className="block text-[10px] font-black text-emerald-400 mb-3 uppercase tracking-widest">Email <span className="text-rose-400">*</span></label>
+                 <label className="block text-[10px] font-black text-emerald-400 mb-3 uppercase tracking-widest">Alamat Email <span className="text-rose-400">*</span></label>
                  <input type="email" name="email" required value={formData.email} onChange={handleChange} className="w-full bg-white/10 border-2 border-white/10 rounded-2xl px-8 py-6 text-xl font-black text-white outline-none focus:border-emerald-500 transition-all" placeholder="nama@email.com" />
                </div>
             </div>
+
             <div className="flex justify-between pt-6">
               <button type="button" onClick={() => setStep(prev => prev - 1)} className="text-slate-400 px-8 py-5 font-black flex items-center gap-3 hover:text-slate-900 transition-colors"> <ArrowLeft size={20} /> Kembali</button>
               <button type="button" onClick={handleNext} className="bg-emerald-600 text-white px-12 py-5 rounded-3xl font-black flex items-center gap-3 hover:bg-emerald-700 shadow-xl shadow-emerald-100 active:scale-95">Tinjau Data SPMB <ArrowRight size={20} /></button>
