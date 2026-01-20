@@ -155,13 +155,12 @@ const RegistrationForm: React.FC = () => {
       if (!formData.pekerjaan_ibu) missing.push("Pekerjaan Ibu");
       if (!formData.penghasilan_ibu) missing.push("Penghasilan Ibu");
     } else if (currentStep === 5) {
-      if (!formData.tinggi_badan) missing.push("Tinggi Badan");
-      if (!formData.berat_badan) missing.push("Berat Badan");
-      if (!formData.lingkar_kepala) missing.push("Lingkar Kepala");
-      if (!formData.jarak_km) missing.push("Jarak (km)");
-      if (!formData.waktu_jam || !formData.waktu_menit) missing.push("Waktu Tempuh");
-      if (!formData.bottom) missing.push("Waktu Tempuh");
-      if (!formData.jumlah_saudara) missing.push("Jumlah Saudara");
+      if (formData.tinggi_badan === '') missing.push("Tinggi Badan");
+      if (formData.berat_badan === '') missing.push("Berat Badan");
+      if (formData.lingkar_kepala === '') missing.push("Lingkar Kepala");
+      if (formData.jarak_km === '') missing.push("Jarak (km)");
+      if (formData.waktu_jam === '' || formData.waktu_menit === '') missing.push("Waktu Tempuh");
+      if (formData.jumlah_saudara === '') missing.push("Jumlah Saudara");
       if (!formData.no_hp) missing.push("No. WhatsApp");
       if (!formData.email) missing.push("Email");
     }
