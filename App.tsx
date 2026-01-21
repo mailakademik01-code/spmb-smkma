@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { 
   Menu, 
@@ -54,6 +53,7 @@ const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'home' | 'register' | 'admin'>('home');
   const [scrolled, setScrolled] = useState(false);
   const [dynamicDepartments, setDynamicDepartments] = useState<any[]>(DEPARTMENTS);
+  const [heroImage, setHeroImage] = useState('https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&q=80&w=1000');
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
     return localStorage.getItem('isAdminAuthenticated') === 'true';
   });
@@ -62,19 +62,63 @@ const App: React.FC = () => {
     return saved ? JSON.parse(saved) : null;
   });
 
-  // Fetch dynamic major settings
-  useEffect(() => {
-    const fetchMajorSettings = async () => {
-      try {
-        const { data, error } = await supabase.from('major_settings').select('*');
-        if (!error && data && data.length > 0) {
-          setDynamicDepartments(data);
-        }
-      } catch (err) {
-        console.error("Failed to load dynamic majors:", err);
+  // Fetch dynamic settings (majors & site config)
+  const fetchSettings = async () => {
+    try {
+      // Fetch Majors
+      const { data: majorsData } = await supabase.from('major_settings').select('*');
+      if (majorsData && majorsData.length > 0) {
+        setDynamicDepartments(majorsData);
       }
+
+      // Fetch Site Config (Hero Image)
+      const { data: siteData } = await supabase
+        .from('site_settings')
+        .select('*')
+        .eq('key', 'hero_image_url')
+        .maybeSingle();
+      
+      if (siteData && siteData.value) {
+        console.log("Setting Hero Image from DB:", siteData.value);
+        setHeroImage(siteData.value);
+      }
+    } catch (err) {
+      console.error("Failed to load settings:", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchSettings();
+
+    // Set up Realtime listener for instant updates
+    const channel = supabase
+      .channel('schema-db-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'site_settings'
+        },
+        (payload) => {
+          console.log('Realtime change detected:', payload);
+          if (payload.new && (payload.new as any).key === 'hero_image_url') {
+            setHeroImage((payload.new as any).value);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
     };
-    fetchMajorSettings();
+  }, []);
+
+  // Re-fetch whenever user goes back to home to ensure sync
+  useEffect(() => {
+    if (activeTab === 'home') {
+      fetchSettings();
+    }
   }, [activeTab]);
 
   // Handle scroll effect
@@ -99,7 +143,7 @@ const App: React.FC = () => {
       }
     };
     window.addEventListener('hashchange', handleHashChange);
-    handleHashChange(); // Check initial hash
+    handleHashChange(); 
     return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
 
@@ -176,7 +220,7 @@ const App: React.FC = () => {
                 <button 
                   key={item.label} 
                   onClick={() => handleNavigate('home', item.href)}
-                  className="text-xs font-black text-slate-500 hover:text-emerald-600 transition-all uppercase tracking-widest relative after:content-[''] after:absolute after:bottom-[-4px] after:left-0 after:w-0 after:h-[2px] after:bg-emerald-500 hover:after:w-full after:transition-all"
+                  className="text-xs font-black text-slate-500 hover:text-emerald-600 transition-all uppercase tracking-widest relative after:content-[''] after:absolute after:bottom-[-4px] after:left-0 after:w-0 after:h-[2px] after:bg-emerald-50 hover:after:w-full after:transition-all"
                 >
                   {item.label}
                 </button>
@@ -277,7 +321,8 @@ const App: React.FC = () => {
                     <div className="relative z-20 animate-float">
                       <div className="rounded-[3rem] overflow-hidden shadow-[0_50px_100px_-20px_rgba(0,0,0,0.25)] aspect-[4/5] border-8 border-white group">
                         <img 
-                          src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&q=80&w=1000" 
+                          key={heroImage}
+                          src={heroImage} 
                           alt="Siswa Berprestasi" 
                           className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" 
                         />
@@ -587,7 +632,7 @@ const App: React.FC = () => {
 
             <div className="group p-10 rounded-[3rem] bg-white/5 border border-white/10 hover:bg-white/10 transition-all duration-500">
               <div className="bg-emerald-600/20 w-16 h-16 rounded-2xl text-emerald-400 flex items-center justify-center mx-auto mb-8 group-hover:scale-110 group-hover:rotate-6 transition-all">
-                <Mail size={32} />
+                <Phone size={32} />
               </div>
               <h4 className="font-black text-xl uppercase tracking-tight mb-4">Email</h4>
               <p className="text-slate-400 text-sm font-medium">{CONTACT_INFO.email}</p>

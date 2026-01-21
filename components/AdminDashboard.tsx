@@ -36,10 +36,12 @@ import {
   Info,
   Edit3,
   Save,
-  ChevronLeft
+  ChevronLeft,
+  Layout
 } from 'lucide-react';
 import UserManagement from './UserManagement.tsx';
 import MajorSettings from './MajorSettings.tsx';
+import SiteSettings from './SiteSettings.tsx';
 
 interface Registration {
   id: string;
@@ -116,7 +118,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ adminProfile }) => {
   const [search, setSearch] = useState('');
   const [refreshing, setRefreshing] = useState(false);
   const [selectedReg, setSelectedReg] = useState<Registration | null>(null);
-  const [activeTab, setActiveTab] = useState<'registrations' | 'users' | 'settings'>('registrations');
+  const [activeTab, setActiveTab] = useState<'registrations' | 'users' | 'settings' | 'site'>('registrations');
   
   // Edit State
   const [isEditing, setIsEditing] = useState(false);
@@ -267,7 +269,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ adminProfile }) => {
 
   return (
     <div className="space-y-8 pb-20">
-      <div className="flex bg-white p-1.5 rounded-2xl border border-slate-200 w-fit shadow-sm overflow-x-auto">
+      <div className="flex bg-white p-1.5 rounded-2xl border border-slate-200 w-fit shadow-sm overflow-x-auto max-w-full">
         <button 
           onClick={() => setActiveTab('registrations')}
           className={`px-6 py-2.5 rounded-xl font-black text-xs flex items-center gap-2 transition-all whitespace-nowrap ${activeTab === 'registrations' ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-500 hover:bg-slate-50'}`}
@@ -277,6 +279,12 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ adminProfile }) => {
         
         {adminProfile?.role === 'super_admin' && (
           <>
+            <button 
+              onClick={() => setActiveTab('site')}
+              className={`px-6 py-2.5 rounded-xl font-black text-xs flex items-center gap-2 transition-all whitespace-nowrap ${activeTab === 'site' ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-500 hover:bg-slate-50'}`}
+            >
+              <Layout size={16} /> Pengaturan Situs
+            </button>
             <button 
               onClick={() => setActiveTab('users')}
               className={`px-6 py-2.5 rounded-xl font-black text-xs flex items-center gap-2 transition-all whitespace-nowrap ${activeTab === 'users' ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-500 hover:bg-slate-50'}`}
@@ -434,6 +442,10 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ adminProfile }) => {
 
       {activeTab === 'settings' && adminProfile?.role === 'super_admin' && (
         <MajorSettings />
+      )}
+
+      {activeTab === 'site' && adminProfile?.role === 'super_admin' && (
+        <SiteSettings />
       )}
 
       {selectedReg && (
